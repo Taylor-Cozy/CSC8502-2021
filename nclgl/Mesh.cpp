@@ -11,7 +11,7 @@ Mesh::Mesh(void)	{
 	}
 
 	numVertices  = 0;
-	type		 = GL_TRIANGLE_STRIP;
+	type		 = GL_TRIANGLES;
 
 	numIndices		= 0;
 	vertices		= nullptr;

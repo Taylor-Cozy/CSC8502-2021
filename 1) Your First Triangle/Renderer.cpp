@@ -46,7 +46,7 @@ void Renderer::RenderScene() {
 
 	for (int i = 0; i < 4; i++) {
 		vertBuf->x *= 0.99f;
-		vertBuf->y += 0.99f;
+		vertBuf->y *= 0.99f;
 		vertBuf++;
 	}
 
