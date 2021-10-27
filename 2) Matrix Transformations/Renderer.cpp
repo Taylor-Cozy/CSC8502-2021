@@ -19,6 +19,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 Renderer::~Renderer(void) {
 	delete triangle;
 	delete matrixShader;
+	delete cam;
 }
 
 void Renderer::SwitchToPerspective()
