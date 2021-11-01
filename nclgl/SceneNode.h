@@ -19,12 +19,15 @@ public:
 	void SetColour(Vector4 c) { colour = c; }
 
 	Vector3 GetModelScale() const { return modelScale; }
-	void SetModelScale(Vector3 s) { modelScale = s; }
+	void SetModelScale(Vector3 s) { modelScale = s; 
+	transform = transform * Matrix4::Scale(s);
+	}
 
 	Mesh* GetMesh() const { return mesh; }
 	void SeMesh(Mesh* m) { mesh = m; }
 
 	void AddChild(SceneNode* s);
+	void RemoveChild(SceneNode* s);
 	virtual void Update(float dt);
 	virtual void Draw(const OGLRenderer& r);
 
@@ -34,6 +37,7 @@ public:
 protected:
 	SceneNode* parent;
 	Mesh* mesh;
+	Shader* shader;
 	Matrix4 worldTransform;
 	Matrix4 transform;
 	Vector3 modelScale;

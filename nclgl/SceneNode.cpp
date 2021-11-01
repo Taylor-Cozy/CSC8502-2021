@@ -18,11 +18,21 @@ void SceneNode::AddChild(SceneNode* s) {
 	s->parent = this;
 }
 
+void SceneNode::RemoveChild(SceneNode* s) {
+	for (auto it = children.begin(); it != children.end(); it++) {
+		if (s == *it) {
+			delete *it;
+			children.erase(it);
+		}
+	}
+}
+
 void SceneNode::Draw(const OGLRenderer& r) {
 	if (mesh) { mesh->Draw(); }
 }
 
 void SceneNode::Update(float dt) {
+
 	if (parent) {
 		worldTransform = parent->worldTransform * transform;
 	}

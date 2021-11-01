@@ -13,4 +13,3 @@ protected:
 	SceneNode* leftArm;
 	SceneNode* rightArm;
 };
-

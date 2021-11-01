@@ -9,7 +9,7 @@ class Renderer : public OGLRenderer
 {
 public:
 	Renderer(Window& parent);
-	~Renderer(void);
+	virtual ~Renderer(void);
 
 	void UpdateScene(float dt) override;
 	void RenderScene() override;
