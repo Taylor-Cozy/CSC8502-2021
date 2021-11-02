@@ -32,6 +32,17 @@
     <ClCompile Include="Window.cpp">
       <Filter>Windows and Input</Filter>
     </ClCompile>
+<<<<<<< Updated upstream
+=======
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="SceneNode.cpp" />
+    <ClCompile Include="CubeRobot.cpp" />
+    <ClCompile Include="Plane.cpp" />
+    <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="BoundingVolume.cpp" />
+    <ClCompile Include="BoundingSphere.cpp" />
+    <ClCompile Include="BoundingRectangle.cpp" />
+>>>>>>> Stashed changes
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -75,6 +86,17 @@
     <ClInclude Include="InputDevice.h">
       <Filter>Windows and Input</Filter>
     </ClInclude>
+<<<<<<< Updated upstream
+=======
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="SceneNode.h" />
+    <ClInclude Include="CubeRobot.h" />
+    <ClInclude Include="Plane.h" />
+    <ClInclude Include="Frustum.h" />
+    <ClInclude Include="BoundingVolume.h" />
+    <ClInclude Include="BoundingSphere.h" />
+    <ClInclude Include="BoundingRectangle.h" />
+>>>>>>> Stashed changes
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

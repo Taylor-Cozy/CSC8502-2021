@@ -78,6 +78,31 @@ Mesh* Mesh::GenerateQuad()
 	return m;
 }
 
+Mesh* Mesh::DrawAxisLines() {
+	Mesh* m = new Mesh();
+	m->numVertices = 6;
+	m->type = GL_LINES;
+
+	m->vertices = new Vector3[m->numVertices];
+	m->colours = new Vector4[m->numVertices];
+
+	m->vertices[0] = Vector3(0, 0, 0);
+	m->vertices[1] = Vector3(1, 0, 0);
+	m->vertices[2] = Vector3(0, 0, 0);
+	m->vertices[3] = Vector3(0, 1, 0);
+	m->vertices[4] = Vector3(0, 0, 0);
+	m->vertices[5] = Vector3(0, 0, 1);
+
+	m->colours[0] = Vector4(0, 0, 0, 0);
+	m->colours[1] = Vector4(1, 0, 0, 0);
+	m->colours[2] = Vector4(0, 0, 0, 0);
+	m->colours[3] = Vector4(0, 1, 0, 0);
+	m->colours[4] = Vector4(0, 0, 0, 0);
+	m->colours[5] = Vector4(0, 0, 1, 0);
+
+	m->BufferData();
+	return m;
+}
 void Mesh::Draw()	{
 	glBindVertexArray(arrayObject);
 	if(bufferObject[INDEX_BUFFER]) {

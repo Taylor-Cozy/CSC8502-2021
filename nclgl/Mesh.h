@@ -51,6 +51,7 @@ public:
 
 	static Mesh* GenerateTriangle();
 	static Mesh* GenerateQuad();
+	static Mesh* DrawAxisLines();
 
 	void Draw();
 	void DrawSubMesh(int i);
@@ -85,6 +86,7 @@ public:
 
 	bool GetSubMesh(int i, const SubMesh* s) const;
 	bool GetSubMesh(const std::string& name, const SubMesh* s) const;
+
 
 	GLuint* getBufferObject() {
 		return bufferObject;
