@@ -23,13 +23,17 @@ protected:
 	void SortNodeLists();
 	void ClearNodeLists();
 	void DrawNodes();
+	void DrawDebugNodes();
 	void DrawNode(SceneNode* n);
+	void DrawDebugNode(SceneNode* n);
 
 	SceneNode* root;
 	Camera* camera;
 	Mesh* quad;
 	Mesh* cube;
+	Mesh* debugSphere;
 	Shader* shader;
+	Shader* debugShader;
 	GLuint texture;
 
 	Frustum frameFrustum;

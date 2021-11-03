@@ -1,5 +1,8 @@
 #pragma once
 #include "Vector3.h"
+#include "SceneNode.h"
+#include "BoundingSphere.h"
+#include "BoundingBox.h"
 
 class Plane
 {
@@ -15,6 +18,9 @@ public:
 	float GetDistance() const { return distance; }
 
 	bool SphereInPlane(const Vector3& position, float radius) const;
+	bool CheckInPlane(SceneNode& n);
+	bool SphereInPlane(SceneNode& n);
+	bool BoxInPlane(SceneNode& n);
 	
 protected:
 	Vector3 normal;

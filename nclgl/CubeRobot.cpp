@@ -1,4 +1,6 @@
 #include "CubeRobot.h"
+#include "BoundingSphere.h"
+#include "BoundingBox.h"
 
 CubeRobot::CubeRobot(Mesh* cube)
 {
@@ -37,14 +39,23 @@ CubeRobot::CubeRobot(Mesh* cube)
 	rightLeg->SetTransform(Matrix4::Translation(Vector3(8, 0, 0)));
 	hips->AddChild(rightLeg);
 
-	body->SetBoundingRadius(15.0f);
-	head->SetBoundingRadius(5.0f);
+	body->SetBoundingVolume(new BoundingBox(body->GetModelScale(), body->GetWorldTransform()));
+	body->GetBoundingVolume()->SetOffset(Vector3(0, body->GetModelScale().y, 0));
+	
+	head->SetBoundingVolume(new BoundingBox(head->GetModelScale(), head->GetWorldTransform()));
+	head->GetBoundingVolume()->SetOffset(Vector3(0, head->GetModelScale().y, 0));
+	
+	leftArm->SetBoundingVolume(new BoundingBox(leftArm->GetModelScale(), leftArm->GetWorldTransform()));
+	leftArm->GetBoundingVolume()->SetOffset(Vector3(0, leftArm->GetModelScale().y, 0));
 
-	leftArm->SetBoundingRadius(18.0f);
-	rightArm->SetBoundingRadius(18.0f);
+	rightArm->SetBoundingVolume(new BoundingBox(rightArm->GetModelScale(), rightArm->GetWorldTransform()));
+	rightArm->GetBoundingVolume()->SetOffset(Vector3(0, rightArm->GetModelScale().y, 0));
 
-	leftLeg->SetBoundingRadius(18.0f);
-	rightLeg->SetBoundingRadius(18.0f);
+	leftLeg->SetBoundingVolume(new BoundingBox(leftLeg->GetModelScale(), leftLeg->GetWorldTransform()));
+	leftLeg->GetBoundingVolume()->SetOffset(Vector3(0, leftLeg->GetModelScale().y, 0));
+
+	rightLeg->SetBoundingVolume(new BoundingBox(rightLeg->GetModelScale(), rightLeg->GetWorldTransform()));
+	rightLeg->GetBoundingVolume()->SetOffset(Vector3(0, rightLeg->GetModelScale().y, 0));
 }
 
 void CubeRobot::Update(float dt) {

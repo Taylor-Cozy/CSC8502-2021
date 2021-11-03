@@ -1,12 +1,13 @@
 #include "SceneNode.h"
-
+#include "BoundingSphere.h"
+#include "BoundingBox.h"
 SceneNode::SceneNode(Mesh* mesh, Vector4 colour) {
 	this->mesh = mesh;
 	this->colour = colour;
 	parent = NULL;
 	modelScale = Vector3(1, 1, 1);
 
-	boundingRadius = 1.0f;
+	boundingVol = &BoundingBox(Vector3(1,1,1), worldTransform);
 	distanceFromCamera = 0.0f;
 	texture = 0;
 }
@@ -43,6 +44,8 @@ void SceneNode::Update(float dt) {
 	else {
 		worldTransform = transform;
 	}
+
+	boundingVol->SetWorldPosition(worldTransform * Matrix4::Translation(boundingVol->GetOffset()));
 
 	for (vector<SceneNode*>::iterator i = children.begin(); i != children.end(); i++) {
 		(*i)->Update(dt);

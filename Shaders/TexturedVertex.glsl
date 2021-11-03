@@ -11,12 +11,12 @@ in vec4 colour;
 
 out Vertex {
     vec2 texCoord;
-    //smooth vec4 colour;
+    smooth vec4 colour;
 } OUT;
 
 void main(void) {
     mat4 mvp = projMatrix * viewMatrix * modelMatrix;
     gl_Position = mvp * vec4(position, 1.0);
     OUT.texCoord = (textureMatrix * vec4(texCoord, 0.0, 1.0)).xy;
-    //OUT.colour		= colour;
+    OUT.colour		= colour;
 }

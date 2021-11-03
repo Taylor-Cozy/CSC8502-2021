@@ -37,6 +37,10 @@
     <ClCompile Include="CubeRobot.cpp" />
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="BoundingSphere.cpp" />
+    <ClCompile Include="BoundingBox.cpp" />
+    <ClCompile Include="BoundingVolume.cpp" />
+    <ClCompile Include="HeightMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -85,6 +89,10 @@
     <ClInclude Include="CubeRobot.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="Frustum.h" />
+    <ClInclude Include="BoundingSphere.h" />
+    <ClInclude Include="BoundingBox.h" />
+    <ClInclude Include="BoundingVolume.h" />
+    <ClInclude Include="HeightMap.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

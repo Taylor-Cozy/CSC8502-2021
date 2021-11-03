@@ -2,17 +2,21 @@
 #include "../nclgl/CubeRobot.h"
 #include "..//nclgl/Camera.h"
 #include <algorithm>
+#include "..//nclgl/BoundingBox.h"
+#include "..//nclgl/BoundingSphere.h"
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	camera = new Camera(0.0f, 0.0f, 0.0f, (Vector3(0, 100, 750.f)));
 	quad = Mesh::GenerateQuad();
 	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
+	debugSphere = Mesh::LoadFromMeshFile("sphere.msh");
 
 	shader = new Shader("SceneVertex.glsl", "SceneFragment.glsl");
+	debugShader = new Shader("DebugVertex.glsl", "DebugFragment.glsl");
 
 	texture = SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
 
-	if (!shader->LoadSuccess() || !texture)
+	if (!shader->LoadSuccess() || !debugShader->LoadSuccess() || !texture)
 		return;
 
 	root = new SceneNode();
@@ -21,8 +25,8 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 		SceneNode* s = new SceneNode();
 		s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
 		s->SetTransform(Matrix4::Translation(Vector3(0, 100.0f, -300.0f + 100.0f + 100 * i)));
-		s->SetModelScale(Vector3(10.0f, 10.0f, 10.0f));
-		s->SetBoundingRadius(100.0f);
+		s->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+		s->SetBoundingVolume(new BoundingBox(Vector3(100,100,1), s->GetWorldTransform()));
 		s->SetMesh(quad);
 		s->SetTexture(texture);
 		root->AddChild(s);
@@ -79,12 +83,35 @@ void Renderer::SortNodeLists() {
 }
 
 void Renderer::DrawNodes() {
+
+	BindShader(shader);
+	UpdateShaderMatrices();
+
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
+	//glEnable(GL_DEPTH_TEST);
+
 	for (const auto& i : nodeList) {
 		DrawNode(i);
 	}
 
 	for (const auto& i : transparentNodeList) {
 		DrawNode(i);
+	}
+}
+
+void Renderer::DrawDebugNodes() {
+
+	BindShader(debugShader);
+	UpdateShaderMatrices();
+
+	//glDisable(GL_DEPTH_TEST);
+
+	for (const auto& i : nodeList) {
+		DrawDebugNode(i);
+	}
+
+	for (const auto& i : transparentNodeList) {
+		DrawDebugNode(i);
 	}
 }
 
@@ -104,6 +131,16 @@ void Renderer::DrawNode(SceneNode* n) {
 	}
 }
 
+void Renderer::DrawDebugNode(SceneNode* n) {
+	if (n->GetMesh()) {
+		Matrix4 model = n->GetBoundingVolume()->GetWorldPosition() * Matrix4::Scale(static_cast<BoundingBox*>(n->GetBoundingVolume())->GetBoundingSize());
+		glUniformMatrix4fv(glGetUniformLocation(debugShader->GetProgram(), "modelMatrix"), 1, false, model.values);
+		glUniform4fv(glGetUniformLocation(debugShader->GetProgram(), "nodeColour"), 1, (float*)&Vector4(0.98, 0.28, 0.76, 0.5));
+
+		debugSphere->Draw();
+	}
+}
+
 void Renderer::RenderScene() {
 	BuildNodeLists(root);
 	SortNodeLists();
@@ -112,9 +149,17 @@ void Renderer::RenderScene() {
 
 	BindShader(shader);
 	UpdateShaderMatrices();
-
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
+
+	BindShader(debugShader);
+	UpdateShaderMatrices();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_DEPTH_TEST);
 	DrawNodes();
+	glDisable(GL_DEPTH_TEST);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	DrawDebugNodes();
 
 	ClearNodeLists();
 }

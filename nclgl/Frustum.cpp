@@ -1,10 +1,11 @@
 #include "Frustum.h"
 #include "SceneNode.h"
 #include "Matrix4.h"
+#include "BoundingBox.h"
 
 bool Frustum::InsideFrustum(SceneNode& n) {
 	for (int p = 0; p < 6; ++p) {
-		if (!planes[p].SphereInPlane(n.GetWorldTransform().GetPositionVector(), n.GetBoundingRadius())) {
+		if (!planes[p].CheckInPlane(n)) {
 			return false;
 		}
 	}
