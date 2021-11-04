@@ -45,7 +45,18 @@ void SceneNode::Update(float dt) {
 		worldTransform = transform;
 	}
 
-	boundingVol->SetWorldPosition(worldTransform * Matrix4::Translation(boundingVol->GetOffset()));
+	if (boundingVol->GetType() == BOX) {
+		BoundingBox* b = static_cast<BoundingBox*>(boundingVol);
+		//b->SetWorldPosition(Matrix4::Translation(worldTransform.GetPositionVector()) * Matrix4::Translation(b->GetOffset()) * Matrix4::Scale(b->GetBoundingSize()));
+		b->SetWorldPosition(worldTransform * Matrix4::Translation(b->GetOffset()) * Matrix4::Scale(b->GetBoundingSize()));
+	}
+	
+	if (boundingVol->GetType() == SPHERE) {
+		BoundingSphere* b = static_cast<BoundingSphere*>(boundingVol);
+		Vector3 boundingSize(b->GetBoundingRadius(), b->GetBoundingRadius(), b->GetBoundingRadius());
+
+		b->SetWorldPosition(Matrix4::Translation(worldTransform.GetPositionVector()) * Matrix4::Translation(b->GetOffset()) * Matrix4::Scale(boundingSize));
+	}
 
 	for (vector<SceneNode*>::iterator i = children.begin(); i != children.end(); i++) {
 		(*i)->Update(dt);

@@ -41,7 +41,7 @@ CubeRobot::CubeRobot(Mesh* cube)
 
 	body->SetBoundingVolume(new BoundingBox(body->GetModelScale(), body->GetWorldTransform()));
 	body->GetBoundingVolume()->SetOffset(Vector3(0, body->GetModelScale().y, 0));
-	
+
 	head->SetBoundingVolume(new BoundingBox(head->GetModelScale(), head->GetWorldTransform()));
 	head->GetBoundingVolume()->SetOffset(Vector3(0, head->GetModelScale().y, 0));
 	
