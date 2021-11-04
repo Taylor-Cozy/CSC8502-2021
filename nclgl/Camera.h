@@ -41,5 +41,6 @@ protected:
 	float pitch;
 	float roll;
 	Vector3 position;
+	float speed = 20.0f;
 };
 

@@ -9,7 +9,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	camera = new Camera(0.0f, 0.0f, 0.0f, (Vector3(0, 100, 750.f)));
 	quad = Mesh::GenerateQuad();
 	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
-	debugSphere = Mesh::LoadFromMeshFile("sphere.msh");
+	debugSphere = Mesh::LoadFromMeshFile("cube.msh");
 
 	shader = new Shader("SceneVertex.glsl", "SceneFragment.glsl");
 	debugShader = new Shader("DebugVertex.glsl", "DebugFragment.glsl");
@@ -134,7 +134,7 @@ void Renderer::DrawNode(SceneNode* n) {
 void Renderer::DrawDebugNode(SceneNode* n) {
 	if (n->GetMesh()) {
 		Matrix4 model = n->GetBoundingVolume()->GetWorldPosition() * Matrix4::Scale(static_cast<BoundingBox*>(n->GetBoundingVolume())->GetBoundingSize());
-		glUniformMatrix4fv(glGetUniformLocation(debugShader->GetProgram(), "modelMatrix"), 1, false, model.values);
+		glUniformMatrix4fv(glGetUniformLocation(debugShader->GetProgram(), "modelMatrix"), 1, false, (model* Matrix4::Scale(Vector3(2,2,2))).values);
 		glUniform4fv(glGetUniformLocation(debugShader->GetProgram(), "nodeColour"), 1, (float*)&Vector4(0.98, 0.28, 0.76, 0.5));
 
 		debugSphere->Draw();

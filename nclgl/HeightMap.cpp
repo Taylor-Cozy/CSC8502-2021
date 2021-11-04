@@ -3,6 +3,8 @@
 
 HeightMap::HeightMap(const std::string& name)
 {
+	type = GL_TRIANGLES;
+
 	int iWidth, iHeight, iChans;
 	unsigned char* data = SOIL_load_image(name.c_str(), &iWidth, &iHeight, &iChans, 1);
 
@@ -16,6 +18,7 @@ HeightMap::HeightMap(const std::string& name)
 	vertices = new Vector3[numVertices];
 	textureCoords = new Vector2[numVertices];
 	indices = new GLuint[numIndices];
+	colours = new Vector4[numVertices];
 
 	Vector3 vertexScale = Vector3(16.0f, 1.0f, 16.0f);
 	Vector2 textureScale = Vector2(1 / 16.0f, 1 / 16.0f);
@@ -23,8 +26,10 @@ HeightMap::HeightMap(const std::string& name)
 	for (int z = 0; z < iHeight; z++) {
 		for (int x = 0; x < iWidth; x++) {
 			int offset = (z * iWidth) + x;
+			//std::cout << (int)data[offset] << std::endl;
 			vertices[offset] = Vector3(x, data[offset], z) * vertexScale;
 			textureCoords[offset] = Vector2(x, z) * textureScale;
+			colours[offset] = Vector4(data[offset] / 255.0f, 0, 0, 1);
 		}
 	}
 	SOIL_free_image_data(data);
