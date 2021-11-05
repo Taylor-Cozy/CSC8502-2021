@@ -21,16 +21,16 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	root = new SceneNode();
 
-	//for (int i = 0; i < 5; i++) {
-	//	SceneNode* s = new SceneNode();
-	//	s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
-	//	s->SetTransform(Matrix4::Translation(Vector3(0, 100.0f, -300.0f + 100.0f + 100 * i)));
-	//	s->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
-	//	s->SetBoundingVolume(new BoundingBox(Vector3(100,100,1), s->GetWorldTransform()));
-	//	s->SetMesh(quad);
-	//	s->SetTexture(texture);
-	//	root->AddChild(s);
-	//}
+	for (int i = 0; i < 5; i++) {
+		SceneNode* s = new SceneNode();
+		s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
+		s->SetTransform(Matrix4::Translation(Vector3(0, 100.0f, -300.0f + 100.0f + 100 * i)));
+		s->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+		s->SetBoundingVolume(new BoundingBox(Vector3(100,100,1), s->GetWorldTransform()));
+		s->SetMesh(quad);
+		s->SetTexture(texture);
+		root->AddChild(s);
+	}
 
 	root->AddChild(new CubeRobot(cube));
 
@@ -137,7 +137,7 @@ void Renderer::DrawDebugNode(SceneNode* n) {
 		glUniformMatrix4fv(glGetUniformLocation(debugShader->GetProgram(), "modelMatrix"), 1, false, (model* Matrix4::Scale(Vector3(2,2,2))).values);
 		glUniform4fv(glGetUniformLocation(debugShader->GetProgram(), "nodeColour"), 1, (float*)&Vector4(0.98, 0.28, 0.76, 0.5));
 
-		debugSphere->Draw();
+		//debugSphere->Draw();
 	}
 }
 
