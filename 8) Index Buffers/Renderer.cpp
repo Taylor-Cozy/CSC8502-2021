@@ -4,12 +4,12 @@
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	heightMap = new HeightMap(TEXTUREDIR"noise.png");
-	camera = new Camera(-40, 270, 0, Vector3());
+	camera = new Camera(-40, 0, 0, Vector3());
 
 	Vector3 dimensions = heightMap->GetHeightMapSize();
 	camera->SetPosition(dimensions * Vector3(0.5, 2, 0.5));
 
-	shader = new Shader("TexturedVertex.glsl", "TexturedFragment.glsl");
+	shader = new Shader("TexturedVertex.glsl", "NeonLinesFrag.glsl");
 
 	if (!shader->LoadSuccess())
 		return;
@@ -23,9 +23,12 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 	init = true;
 }
 
@@ -41,6 +44,7 @@ void Renderer::UpdateScene(float dt) {
 }
 
 void Renderer::RenderScene() {
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	BindShader(shader);
