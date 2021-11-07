@@ -4,7 +4,8 @@
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	//triangle = Mesh::GenerateTriangle();
-	triangle = Mesh::GenerateQuad();
+	triangle = Mesh::GenerateCircle(width, height);
+	//triangle = Mesh::GenerateQuad();
 
 	basicShader = new Shader("BasicVertex.glsl", "ColourFragment.glsl");
 
@@ -30,7 +31,7 @@ void Renderer::RenderScene() {
 	Vector4* colourBuf = (Vector4*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
 
 	auto x = std::chrono::system_clock::now();
-	std::cout << sin(x.time_since_epoch().count() / 10000000) << std::endl;
+	//std::cout << sin(x.time_since_epoch().count() / 10000000) << std::endl;
 
 	for (int i = 0; i < 4; i++) {
 		colourBuf->x = abs(sin(x.time_since_epoch().count() / 10000000));
@@ -44,11 +45,11 @@ void Renderer::RenderScene() {
 	glBindBuffer(GL_ARRAY_BUFFER, triangle->getBufferObject()[VERTEX_BUFFER]);
 	Vector3* vertBuf = (Vector3*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
 
-	for (int i = 0; i < 4; i++) {
-		vertBuf->x *= 0.99f;
-		vertBuf->y *= 0.99f;
-		vertBuf++;
-	}
+	//for (int i = 0; i < 4; i++) {
+	//	vertBuf->x *= 0.99f;
+	//	vertBuf->y *= 0.99f;
+	//	vertBuf++;
+	//}
 
 	glUnmapBuffer(GL_ARRAY_BUFFER);
 

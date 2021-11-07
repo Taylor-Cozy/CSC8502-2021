@@ -11,11 +11,12 @@ public:
 		roll = 0.0f;
 	};
 
-	Camera(float pitch, float yaw, float roll, Vector3 position) {
+	Camera(float pitch, float yaw, float roll, Vector3 position, bool disableMove = false) {
 		this->pitch = pitch;
 		this->yaw = yaw;
 		this->roll = roll;
 		this->position = position;
+		this->disableMove = disableMove;
 	}
 
 	~Camera(void) {};
@@ -42,5 +43,6 @@ protected:
 	float roll;
 	Vector3 position;
 	float speed = 300.0f;
+	bool disableMove;
 };
 

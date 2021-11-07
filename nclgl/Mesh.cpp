@@ -90,6 +90,42 @@ Mesh* Mesh::GenerateQuad()
 	return m;
 }
 
+Mesh* Mesh::GenerateCircle(float width, float height) {
+	Mesh* m = new Mesh();
+	m->numVertices = 360;
+	m->type = GL_TRIANGLE_FAN;
+
+	m->vertices = new Vector3[m->numVertices];
+	m->textureCoords = new Vector2[m->numVertices];
+	m->colours = new Vector4[m->numVertices];
+
+	m->vertices[0] = Vector3(0.0f, 0.0f, 0.0f);
+	m->textureCoords[0] = Vector2(0.5f, 0.5f);
+	m->colours[0] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	for (int i = 1; i < m->numVertices; i++) {
+		// Vertices
+		Vector3 pointOnCircumference(0.0f, 0.0f, 0.0f);
+
+		pointOnCircumference.x = 1 * cos((i * 2.0f * PI) / (float)(m->numVertices - 2));
+		pointOnCircumference.y = 1 * sin((i * 2.0f * PI) / (float)(m->numVertices - 2));
+		
+		m->vertices[i] = pointOnCircumference;
+
+		// Texture Coords
+		Vector2 textureCoord;
+		textureCoord.x = (pointOnCircumference.x + 1.0f) / 2.0f;
+		textureCoord.y = (pointOnCircumference.y + 1.0f) / 2.0f;
+		m->textureCoords[i] = textureCoord;
+
+		// Colour value
+		m->colours[i] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+
+	m->BufferData();
+	return m;
+}
+
 void Mesh::Draw()	{
 	glBindVertexArray(arrayObject);
 	if(bufferObject[INDEX_BUFFER]) {

@@ -21,6 +21,7 @@ _-_-_-_-_-_-_-""  ""
 #include "OGLRenderer.h"
 #include <vector>
 #include <string>
+#include <math.h>
 
 //A handy enumerator, to determine which member of the bufferObject array
 //holds which data
@@ -51,6 +52,7 @@ public:
 
 	static Mesh* GenerateTriangle();
 	static Mesh* GenerateQuad();
+	static Mesh* GenerateCircle(float width, float height);
 
 	void Draw();
 	void DrawSubMesh(int i);

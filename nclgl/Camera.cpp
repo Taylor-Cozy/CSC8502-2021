@@ -4,6 +4,7 @@
 
 void Camera::UpdateCamera(float dt)
 {
+
 	pitch -= (Window::GetMouse()->GetRelativePosition().y);
 	yaw -= (Window::GetMouse()->GetRelativePosition().x);
 
@@ -40,10 +41,14 @@ void Camera::UpdateCamera(float dt)
 
 
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SHIFT)) {
-		position.y -= speed * dt;
+		if (!disableMove) {
+			position.y -= speed * dt;
+		}
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SPACE)) {
-		position.y += speed * dt;
+		if (!disableMove) {
+			position.y += speed * dt;
+		}
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_Q)) {
@@ -59,7 +64,11 @@ void Camera::UpdateCamera(float dt)
 	if (roll > 360) {
 		roll -= 360.0f;
 	}
-	
+
+	if (disableMove) {
+		roll = 0;
+		pitch = -90.0f;
+	}
 }
 
 Matrix4 Camera::BuildViewMatrix()

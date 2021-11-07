@@ -14,20 +14,33 @@ public:
 
 protected:
 	void PresentScene();
-	void DrawPostProcess();
+	void DrawPostProcess(GLuint* textureArray, Shader* processShader);
 	void DrawScene();
+	void DrawMap();
 
 	Shader* sceneShader;
 	Shader* processShader;
+	Shader* mapShader;
 
 	Camera* camera;
+	Camera* mapView;
+
+	Matrix4 mapViewMatrix;
+	Matrix4 mapProjMatrix;
+	Matrix4 sceneViewMatrix;
 
 	Mesh* quad;
+	Mesh* circle;
 	HeightMap* heightMap;
 	GLuint heightTexture;
 	GLuint bufferFBO;
+	GLuint mapFBO;
 	GLuint processFBO;
 	GLuint bufferColourTex[2];
+	GLuint mapColourTex[2];
 	GLuint bufferDepthTex;
+	GLuint mapDepthTex;
+
+	int screenWidth, screenHeight;
 };
 
