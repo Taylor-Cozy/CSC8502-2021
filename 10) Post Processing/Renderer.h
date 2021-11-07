@@ -14,13 +14,14 @@ public:
 
 protected:
 	void PresentScene();
-	void DrawPostProcess(GLuint* textureArray, Shader* processShader);
+	void DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses = 1);
 	void DrawScene();
 	void DrawMap();
 
 	Shader* sceneShader;
 	Shader* processShader;
 	Shader* mapShader;
+	Shader* mapProcessShader;
 
 	Camera* camera;
 	Camera* mapView;

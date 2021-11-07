@@ -12,10 +12,11 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	heightMap = new HeightMap(TEXTUREDIR"noise.png");
 	heightTexture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 
-	sceneShader = new Shader("TexturedVertex.glsl", "TexturedFragment.glsl");
+	sceneShader = new Shader("FogVertex.glsl", "FogFrag.glsl");
 	processShader = new Shader("ProcessVertex.glsl", "NoProcessFrag.glsl");
-	mapShader = new Shader("ProcessVertex.glsl", "MapFrag.glsl");
-	//processShader = new Shader("MultipleCamVertex.glsl", "MultipleCamFragment.glsl");
+
+	mapShader = new Shader("TexturedVertex.glsl", "TexturedFragment.glsl");
+	mapProcessShader = new Shader("ProcessVertex.glsl", "NoProcessFrag.glsl");
 
 	if (!sceneShader->LoadSuccess() || !processShader->LoadSuccess() || !heightTexture) {
 		return;
@@ -113,7 +114,7 @@ void Renderer::RenderScene() {
 	DrawScene();
 	DrawPostProcess(bufferColourTex, processShader);
 	DrawMap();
-	DrawPostProcess(mapColourTex, mapShader);
+	DrawPostProcess(mapColourTex, mapProcessShader, 10);
 	PresentScene();
 }
 
@@ -142,7 +143,7 @@ void Renderer::DrawMap() {
 	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	BindShader(sceneShader);
+	BindShader(mapShader);
 	projMatrix = Matrix4::Orthographic(-1.0f, 10000.0f, height / 2.0f, -height / 2.0f, height / 2.0f, -height / 2.0f);
 	viewMatrix = mapViewMatrix;
 	UpdateShaderMatrices();
@@ -153,9 +154,10 @@ void Renderer::DrawMap() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader){
+void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses){
 	glBindFramebuffer(GL_FRAMEBUFFER, processFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureArray[1], 0);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	BindShader(processShader);
@@ -168,7 +170,7 @@ void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader){
 
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(processShader->GetProgram(), "sceneTex"), 0);
-	for (int i = 0; i < POST_PASSES; i++) {
+	for (int i = 0; i < numberPasses; i++) {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureArray[1], 0);
 		glUniform1i(glGetUniformLocation(processShader->GetProgram(), "isVertical"), 0);
 
