@@ -6,5 +6,6 @@ in Vertex{
 
 out vec4 fragColour;
 void main(void){
+	if()
 	fragColour	= IN.colour;
 }

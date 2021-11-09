@@ -41,6 +41,7 @@
     <ClCompile Include="BoundingBox.cpp" />
     <ClCompile Include="BoundingVolume.cpp" />
     <ClCompile Include="HeightMap.cpp" />
+    <ClCompile Include="Light.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -93,6 +94,7 @@
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="BoundingVolume.h" />
     <ClInclude Include="HeightMap.h" />
+    <ClInclude Include="Light.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

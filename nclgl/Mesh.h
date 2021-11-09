@@ -54,6 +54,9 @@ public:
 	static Mesh* GenerateQuad();
 	static Mesh* GenerateCircle(float width, float height);
 
+	void GenerateNormals();
+	bool GetVertexIndicesForTri(unsigned int i, unsigned int& a, unsigned int& b, unsigned int& c) const;
+
 	void Draw();
 	void DrawSubMesh(int i);
 

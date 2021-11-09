@@ -18,7 +18,7 @@ _-_-_-_-_-_-_-""  ""
 
 using std::string;
 
-
+const int MAX_LIGHTS = 64;
 
 static const float biasValues[16] = {
 	0.5, 0.0, 0.0, 0.0,
@@ -160,6 +160,30 @@ bool OGLRenderer::HasInitialised() const{
 	return init;
 }
 
+
+void OGLRenderer::SetShaderLights(const vector<Light*> l)
+{
+	Vector3 positions[MAX_LIGHTS];
+	Vector4 colours[MAX_LIGHTS];
+	Vector4 specColours[MAX_LIGHTS];
+	//float radii[4];
+
+	for (int i = 0; i < l.size(); i++) {
+		positions[i] = l[i]->GetPosition();
+		colours[i] = l[i]->GetColour();
+		specColours[i] = l[i]->GetSpecColour();
+		//radii[i] = l[i]->GetRadius();
+	}
+
+	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), MAX_LIGHTS, (float*)&positions);
+
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "lightColour"), MAX_LIGHTS, (float*)&colours);
+	
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "specLightColour"), MAX_LIGHTS, (float*)&specColours);
+
+	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "MAX_LIGHTS"), MAX_LIGHTS);
+	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "numberOfLights"), l.size());
+}
 
 void OGLRenderer::SetTextureRepeating(GLuint target, bool repeating)
 {

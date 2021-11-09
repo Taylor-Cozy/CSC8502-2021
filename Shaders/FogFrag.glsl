@@ -5,7 +5,7 @@ uniform sampler2D depthTex;
 
 uniform int isVertical;
 
-vec4 sky = vec4(0.2,0.2,0.2,1.0);
+vec4 sky = vec4(0,0,0,1.0);
 
 in Vertex {
     vec2 texCoord;

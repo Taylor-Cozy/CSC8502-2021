@@ -122,7 +122,7 @@ void Renderer::DrawScene() {
 	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glViewport(0, 0, width, height);
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	glClearColor(0, 0, 0, 1.0f);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	BindShader(sceneShader);
