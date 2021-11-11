@@ -7,7 +7,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	mapView = new Camera(-90, 225.0f, 0, Vector3(-150.0f, 250.0f, -150.0f), true);
 
 	quad = Mesh::GenerateQuad();
-	circle = Mesh::GenerateCircle(width, height);
+	circle = Mesh::GenerateCircle();
 
 	heightMap = new HeightMap(TEXTUREDIR"noise.png");
 	heightTexture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
@@ -200,14 +200,14 @@ void Renderer::PresentScene() {
 	glViewport(0, 0, width, height);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bufferColourTex[0]);
-	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
+	//glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
 	quad->Draw();
 
 	// Render map in corner
 	glViewport(0, height-200, 200, 200);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mapColourTex[0]);
-	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
+	//glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
 	circle->Draw();
 
 }

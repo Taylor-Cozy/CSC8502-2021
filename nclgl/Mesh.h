@@ -52,7 +52,7 @@ public:
 
 	static Mesh* GenerateTriangle();
 	static Mesh* GenerateQuad();
-	static Mesh* GenerateCircle(float width, float height);
+	static Mesh* GenerateCircle();
 
 	void GenerateNormals();
 	bool GetVertexIndicesForTri(unsigned int i, unsigned int& a, unsigned int& b, unsigned int& c) const;
@@ -97,6 +97,8 @@ public:
 
 protected:
 	void	BufferData();
+	void GenerateTangents();
+	Vector4 GenerateTangent(int a, int b, int c);
 
 	GLuint	arrayObject;
 

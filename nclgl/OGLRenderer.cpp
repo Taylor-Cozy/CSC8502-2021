@@ -166,13 +166,13 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 	Vector3 positions[MAX_LIGHTS];
 	Vector4 colours[MAX_LIGHTS];
 	Vector4 specColours[MAX_LIGHTS];
-	//float radii[4];
+	int lightTypes[MAX_LIGHTS];
 
 	for (int i = 0; i < l.size(); i++) {
 		positions[i] = l[i]->GetPosition();
 		colours[i] = l[i]->GetColour();
 		specColours[i] = l[i]->GetSpecColour();
-		//radii[i] = l[i]->GetRadius();
+		lightTypes[i] = l[i]->GetType();
 	}
 
 	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), MAX_LIGHTS, (float*)&positions);
@@ -180,6 +180,8 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "lightColour"), MAX_LIGHTS, (float*)&colours);
 	
 	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "specLightColour"), MAX_LIGHTS, (float*)&specColours);
+	
+	glUniform1iv(glGetUniformLocation(currentShader->GetProgram(), "lightType"), MAX_LIGHTS, lightTypes);
 
 	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "MAX_LIGHTS"), MAX_LIGHTS);
 	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "numberOfLights"), l.size());
