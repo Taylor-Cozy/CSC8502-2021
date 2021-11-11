@@ -166,6 +166,8 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 	Vector3 positions[MAX_LIGHTS];
 	Vector4 colours[MAX_LIGHTS];
 	Vector4 specColours[MAX_LIGHTS];
+	Matrix4 shadowMatrices[MAX_LIGHTS];
+	int useShadows[MAX_LIGHTS];
 	int lightTypes[MAX_LIGHTS];
 
 	for (int i = 0; i < l.size(); i++) {
@@ -173,6 +175,8 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 		colours[i] = l[i]->GetColour();
 		specColours[i] = l[i]->GetSpecColour();
 		lightTypes[i] = l[i]->GetType();
+		shadowMatrices[i] = l[i]->GetShadowMatrix();
+		useShadows[i] = l[i]->CheckCastShadows() ? 1 : 0;
 	}
 
 	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), MAX_LIGHTS, (float*)&positions);
@@ -183,8 +187,33 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 	
 	glUniform1iv(glGetUniformLocation(currentShader->GetProgram(), "lightType"), MAX_LIGHTS, lightTypes);
 
-	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "MAX_LIGHTS"), MAX_LIGHTS);
+	glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "shadowMatrices"), MAX_LIGHTS, false, (float*)&shadowMatrices);
+
+	glUniform1iv(glGetUniformLocation(currentShader->GetProgram(), "useShadows"), MAX_LIGHTS, useShadows);
+
 	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "numberOfLights"), l.size());
+}
+
+void OGLRenderer::SetShaderLight(const Light* l)
+{
+	Vector3 position;
+	Vector4 colour;
+	Vector4 specColour;
+	int lightType;
+
+	position = l->GetPosition();
+	colour = l->GetColour();
+	specColour = l->GetSpecColour();
+	lightType = l->GetType();
+
+
+	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), 1, (float*)&position);
+
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "lightColour"), 1, (float*)&colour);
+
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "specLightColour"), 1, (float*)&specColour);
+
+	glUniform1i(glGetUniformLocation(currentShader->GetProgram(), "lightType"), lightType);
 }
 
 void OGLRenderer::SetTextureRepeating(GLuint target, bool repeating)
