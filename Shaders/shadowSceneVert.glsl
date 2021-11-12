@@ -21,8 +21,7 @@ out Vertex {
     vec3 normal;
     vec3 tangent;
     vec3 binormal;
-    vec3 worldPos;
-    vec4 shadowProj[3];
+    vec4 worldPos;
 } OUT;
 
 void main(void){
@@ -37,15 +36,6 @@ void main(void){
     OUT.tangent = wTangent;
     OUT.binormal = cross(wNormal, wTangent) * tangent.w;
 
-    vec4 worldPos = (modelMatrix * vec4(position, 1));
-    OUT.worldPos = worldPos.xyz;
-    gl_Position = (projMatrix * viewMatrix) * worldPos;
-
-    for(int i = 0; i < numberOfLights; i++){
-        if(useShadows[i] == 1){
-            vec3 viewDir = normalize(lightPos[i] - worldPos.xyz);
-            vec4 pushVal = vec4(OUT.normal, 0) * dot(viewDir, OUT.normal);
-            OUT.shadowProj[i] = shadowMatrices[i] * (worldPos + pushVal);
-        }
-    }
+    OUT.worldPos = (modelMatrix * vec4(position, 1));
+    gl_Position = (projMatrix * viewMatrix) * OUT.worldPos;
 }

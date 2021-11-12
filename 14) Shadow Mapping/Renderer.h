@@ -18,6 +18,8 @@ protected:
 	void DrawMainScene();
 
 	GLuint shadowTexArray;
+	GLuint shadowTex;
+	GLuint shadowFBO;
 
 	GLuint sceneDiffuse;
 	GLuint sceneBump;

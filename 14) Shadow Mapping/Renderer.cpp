@@ -3,12 +3,14 @@
 #include "../nclgl/Light.h"
 #include "../nclgl/Camera.h"
 
+#define SHADOWSIZE 4096
+
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	camera = new Camera(-30.0f, 315.0f, 0.0f, Vector3(-8.0f, 5.0f, 8.0f));
 
-	lights.emplace_back(new Light(Vector3(-20.0f, 10.0f, -20.0f), Vector4(1, 0, 0, 1), POINT_LIGHT, true));
-	lights.emplace_back(new Light(Vector3(20.0f, 10.0f, -20.0f), Vector4(0, 0, 1, 1), POINT_LIGHT, true));
-	lights.emplace_back(new Light(Vector3(0.0f, 10.0f, 20.0f), Vector4(0, 1, 0, 1), POINT_LIGHT, true));
+	lights.emplace_back(new Light(Vector3(-40.0f, 10.0f, -40.0f), Vector4(1, 0, 0, 1), POINT_LIGHT, true));
+	lights.emplace_back(new Light(Vector3(40.0f, 10.0f, -40.0f), Vector4(0, 0, 1, 1), POINT_LIGHT, true));
+	lights.emplace_back(new Light(Vector3(0.0f, 10.0f, 40.0f), Vector4(0, 0.5, 0, 1), POINT_LIGHT, true));
 
 	sceneShader = new Shader("shadowSceneVert.glsl", "shadowSceneFrag.glsl");
 	shadowShader = new Shader("shadowVert.glsl", "shadowFrag.glsl");
@@ -25,6 +27,22 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	sceneBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	SetTextureRepeating(sceneDiffuse, true);
 	SetTextureRepeating(sceneBump, true);
+
+	glGenTextures(1, &shadowTex);
+	glBindTexture(GL_TEXTURE_2D, shadowTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOWSIZE, SHADOWSIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenFramebuffers(1, &shadowFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowTex, 0);
+	glDrawBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -66,12 +84,19 @@ void Renderer::RenderScene() {
 }
 
 void Renderer::DrawShadowScene() {
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
 	int counter = 0;
+	int xOffset = 0; int yOffset = 0;
 	for (auto light : lights) {
-		glBindFramebuffer(GL_FRAMEBUFFER, light->getShadowFBO());
+		glViewport(0 + xOffset, 0 + yOffset, 2048, 2048);
 
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, SHADOWSIZE, SHADOWSIZE);
+		xOffset += 2048;
+		if (xOffset == SHADOWSIZE) {
+			xOffset = 0;
+			yOffset += 2048;
+		}
+
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
 		BindShader(shadowShader);
@@ -84,12 +109,11 @@ void Renderer::DrawShadowScene() {
 			UpdateShaderMatrices();
 			sceneMeshes[i]->Draw();
 		}
-
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		glViewport(0, 0, width, height);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glViewport(0, 0, width, height);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Renderer::DrawMainScene() {
@@ -102,8 +126,6 @@ void Renderer::DrawMainScene() {
 	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
 	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "bumpTex"), 1);
 	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "shadowTex"), 2);
-	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "shadowTex2"), 3);
-	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "shadowTex3"), 4);
 	glUniform3fv(glGetUniformLocation(sceneShader->GetProgram(), "cameraPos"), 1, (float*)&camera->GetPosition());
 
 	glActiveTexture(GL_TEXTURE0);
@@ -113,21 +135,7 @@ void Renderer::DrawMainScene() {
 	glBindTexture(GL_TEXTURE_2D, sceneBump);
 
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, lights.at(0)->getShadowTex());
-
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, lights.at(1)->getShadowTex());
-
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, lights.at(2)->getShadowTex());
-
-
-
-	GLuint shadowTextures[3];
-	for (int i = 0; i < 3; i++) {
-		shadowTextures[0] = lights[0]->getShadowTex();
-	}
-	glBindTextures(GL_TEXTURE_2D_ARRAY, 3, shadowTextures);
+	glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (int i = 0; i < 4; i++) {
 		modelMatrix = sceneTransforms[i];
