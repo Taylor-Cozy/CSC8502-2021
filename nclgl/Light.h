@@ -13,12 +13,12 @@ class Light
 {
 public:
 	Light() {}
-	Light(const Vector3& position, const Vector4& colour, lightType type, bool castShadows = false) :
-		position(position), colour(colour), specColour(colour), type(type), castShadows(castShadows) {
+	Light(const Vector3& position, const Vector4& colour, lightType type, float radius = 10.0f , bool castShadows = false) :
+		position(position), colour(colour), specColour(colour), type(type), radius(radius), castShadows(castShadows) {
 	}
 
-	Light(const Vector3& position, const Vector4& colour, const Vector4& specColour, lightType type, bool castShadows = false) :
-		position(position), colour(colour), specColour(specColour), type(type), castShadows(castShadows) {
+	Light(const Vector3& position, const Vector4& colour, const Vector4& specColour, lightType type, float radius = 10.0f, bool castShadows = false) :
+		position(position), colour(colour), specColour(specColour), type(type), radius(radius), castShadows(castShadows) {
 	}
 
 	~Light(void) {
@@ -39,11 +39,14 @@ public:
 	void SetShadowMatrix(Matrix4 shadMat) { shadowMatrix = shadMat;	}
 	Matrix4 GetShadowMatrix() const { return shadowMatrix; }
 
+	float GetRadius() const { return radius; }
+	void SetRadius(float r) { radius = r; }
+
 	bool CheckCastShadows() const { return castShadows; }
 
 protected:
 	void CreateFBO();
-
+	float radius;
 	Vector3 position;
 	Vector4 colour;
 	Vector4 specColour;

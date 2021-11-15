@@ -61,6 +61,7 @@ public:
 protected:
 	void			SetShaderLights(const vector<Light*> l);
 	void			SetShaderLight(const Light* l);
+	void			SetShaderLight(const Light& l);
 	void			SetTextureRepeating(GLuint target, bool state);
 
 	virtual void	Resize(int x, int y);	

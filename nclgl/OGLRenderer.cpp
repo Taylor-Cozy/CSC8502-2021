@@ -214,6 +214,32 @@ void OGLRenderer::SetShaderLight(const Light* l)
 	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "specLightColour"), 1, (float*)&specColour);
 
 	glUniform1i(glGetUniformLocation(currentShader->GetProgram(), "lightType"), lightType);
+
+	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "radius"), l->GetRadius());
+}
+
+void OGLRenderer::SetShaderLight(const Light& l)
+{
+	Vector3 position;
+	Vector4 colour;
+	Vector4 specColour;
+	int lightType;
+
+	position = l.GetPosition();
+	colour = l.GetColour();
+	specColour = l.GetSpecColour();
+	lightType = l.GetType();
+
+
+	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), 1, (float*)&position);
+
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "lightColour"), 1, (float*)&colour);
+
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "specLightColour"), 1, (float*)&specColour);
+
+	glUniform1i(glGetUniformLocation(currentShader->GetProgram(), "lightType"), lightType);
+
+	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "lightRadius"), l.GetRadius());
 }
 
 void OGLRenderer::SetTextureRepeating(GLuint target, bool repeating)
