@@ -19,8 +19,8 @@ public:
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
 
-	GLuint GetTexture() const { return texture; }
-	void SetTexture(GLuint tex) { texture = tex; }
+	GLuint* GetTexture() const { return texture; }
+	void SetTexture(GLuint* tex) { texture = tex; }
 
 	static bool CompareByCameraDistance(SceneNode* a, SceneNode* b) {
 		return (a->distanceFromCamera < b->distanceFromCamera) ? true : false;
@@ -59,6 +59,6 @@ protected:
 
 	float distanceFromCamera;
 	BoundingVolume* boundingVol;
-	GLuint texture;
+	GLuint* texture;
 };
 
