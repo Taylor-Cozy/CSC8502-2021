@@ -64,8 +64,8 @@ bool Plane::BoxInPlane(SceneNode& n)
 	float outside = (orientedNormal.x * extents.x) + (orientedNormal.y * extents.y) + (orientedNormal.z * extents.z) + distance;
 
 	if (outside < 0) {
+		std::cout << "Outside!" << std::endl;
 		return false;
 	}
-
 	return true;
 }

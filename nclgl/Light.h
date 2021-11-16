@@ -52,6 +52,6 @@ protected:
 	Vector4 specColour;
 	lightType type;
 	Matrix4 shadowMatrix;
-	bool castShadows = false;
+	bool castShadows;
 };
 

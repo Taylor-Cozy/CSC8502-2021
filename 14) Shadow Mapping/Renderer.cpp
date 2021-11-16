@@ -8,9 +8,9 @@
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	camera = new Camera(-30.0f, 315.0f, 0.0f, Vector3(-8.0f, 5.0f, 8.0f));
 
-	lights.emplace_back(new Light(Vector3(-40.0f, 10.0f, -40.0f), Vector4(1, 0, 0, 1), POINT_LIGHT, true));
-	lights.emplace_back(new Light(Vector3(40.0f, 10.0f, -40.0f), Vector4(0, 0, 1, 1), POINT_LIGHT, true));
-	lights.emplace_back(new Light(Vector3(0.0f, 10.0f, 40.0f), Vector4(0, 0.5, 0, 1), POINT_LIGHT, true));
+	lights.emplace_back(new Light(Vector3(-20.0f, 10.0f, -20.0f), Vector4(1, 0, 0, 1), POINT_LIGHT, 10.0f, true));
+	lights.emplace_back(new Light(Vector3(20.0f, 10.0f, -20.0f), Vector4(0, 0, 1, 1), POINT_LIGHT, 10.0f, true));
+	lights.emplace_back(new Light(Vector3(0.0f, 10.0f, 20.0f), Vector4(0, 0.5, 0, 1), POINT_LIGHT, 10.0f, true));
 
 	sceneShader = new Shader("shadowSceneVert.glsl", "shadowSceneFrag.glsl");
 	shadowShader = new Shader("shadowVert.glsl", "shadowFrag.glsl");

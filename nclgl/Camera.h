@@ -42,7 +42,7 @@ protected:
 	float pitch;
 	float roll;
 	Vector3 position;
-	float speed = 300.0f / 5;
+	float speed = 300.0f;
 	bool disableMove;
 };
 

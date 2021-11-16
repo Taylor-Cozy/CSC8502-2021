@@ -177,6 +177,7 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 		lightTypes[i] = l[i]->GetType();
 		shadowMatrices[i] = l[i]->GetShadowMatrix();
 		useShadows[i] = l[i]->CheckCastShadows() ? 1 : 0;
+		//std::cout << "Cast Shadows: " << l[i]->CheckCastShadows() << std::endl;
 	}
 
 	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), MAX_LIGHTS, (float*)&positions);
