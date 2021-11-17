@@ -57,6 +57,8 @@ public:
 	void			SwapBuffers();
 
 	bool			HasInitialised() const;	
+
+	void SetTextureMatrix(Matrix4 t) { textureMatrix = t; }
 	
 protected:
 	void			SetShaderLights(const vector<Light*> l);

@@ -10,7 +10,9 @@ SceneNode::SceneNode(Mesh* mesh, Vector4 colour) {
 	boundingVol = &BoundingBox(Vector3(1,1,1), worldTransform);
 	distanceFromCamera = 0.0f;
 	texture = 0;
-	textureMatrix.ToIdentity();
+
+	modelMat.ToIdentity();
+	textureMat.ToIdentity();
 }
 
 SceneNode::~SceneNode(void) {
@@ -39,6 +41,8 @@ void SceneNode::Draw(const OGLRenderer& r) {
 
 void SceneNode::Update(float dt) {
 
+	UpdateVariables(dt);
+
 	if (parent) {
 		worldTransform = parent->worldTransform * transform;
 	}
@@ -62,4 +66,14 @@ void SceneNode::Update(float dt) {
 	for (vector<SceneNode*>::iterator i = children.begin(); i != children.end(); i++) {
 		(*i)->Update(dt);
 	}
+}
+
+void SceneNode::SetShaderVariables() {
+
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, *texture);
+
+	modelMat = GetWorldTransform();
+	textureMat.ToZero();
 }

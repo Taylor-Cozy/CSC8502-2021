@@ -42,10 +42,17 @@ public:
 	Shader* GetShader() const { return shader; }
 	void SetShader(Shader* sh) { shader = sh; }
 
+	virtual void SetShaderVariables();
+
+	Matrix4 GetModelMat() { return modelMat; }
+	Matrix4 GetTextureMat() { return textureMat; }
+
 	void AddChild(SceneNode* s);
 	void RemoveChild(SceneNode* s);
+
 	virtual void Update(float dt);
 	virtual void Draw(const OGLRenderer& r);
+	virtual void UpdateVariables(float dt) {};
 
 	std::vector<SceneNode*>::const_iterator GetChildIteratorStart() { return children.begin(); }
 	std::vector<SceneNode*>::const_iterator GetChildIteratorEnd() { return children.end(); }
@@ -63,5 +70,8 @@ protected:
 	float distanceFromCamera;
 	BoundingVolume* boundingVol;
 	GLuint* texture;
+
+	Matrix4 modelMat;	//Model matrix. NOT MODELVIEW
+	Matrix4 textureMat;	//Texture matrix
 };
 

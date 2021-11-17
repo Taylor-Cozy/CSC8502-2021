@@ -21,10 +21,10 @@ out vec4 fragColour;
 
 void main(void){
     // TODO use sin(time) to affect the mix colour
-    if(texture(heightmapTex, IN.seaFoamTexCoord).r > 0.45 + (sin(time) / 50.0)){
-        fragColour = mix(vec4(0.0,0.41,0.58,0.5), vec4(1,1,1,1.0), (texture(heightmapTex, IN.seaFoamTexCoord).r - (0.45 + (sin(time) / 50.0))) / (0.5 - (0.45 + (sin(time) / 50.0))));
+    if(texture(heightmapTex, IN.seaFoamTexCoord).r > 0.4 + (sin(time) / 50.0)){
+        fragColour = mix(vec4(0.0,0.41,0.58,0.7), vec4(1,1,1,1.0), (texture(heightmapTex, IN.seaFoamTexCoord).r - (0.4 + (sin(time) / 50.0))) / (0.5 - (0.4 + (sin(time) / 50.0))));
     } else {
-        fragColour = vec4(0.0,0.41,0.58,0.5);
+        fragColour = vec4(0.0,0.41,0.58,0.7);
     }
     mat3 TBN = mat3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
 

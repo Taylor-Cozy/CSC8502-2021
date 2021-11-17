@@ -3,6 +3,7 @@
 #include "../nclgl/HeightMap.h"
 #include "../nclgl/BoundingBox.h"
 
+
 Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	
 	quad = Mesh::GenerateQuad();
@@ -19,7 +20,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	
 	root->AddChild(heightMapNode);
 
-	SceneNode* water = new SceneNode(quad);
+	WaterNode* water = new WaterNode(heightmap->GetHeightMapSize(), quad);
 	water->SetTransform(
 		Matrix4::Translation(heightmapSize * 0.5f) *
 		Matrix4::Scale(heightmapSize * 0.5f) *
@@ -35,23 +36,28 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	waterBump = SOIL_load_OGL_texture(TEXTUREDIR"waterbump.PNG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthTexture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	heightmapTex = SOIL_load_OGL_texture(TEXTUREDIR"noise.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	cubeMap = SOIL_load_OGL_cubemap(
 		TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
 		TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
 		TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg",
 		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
 
-	if (!waterTexture || !waterBump || !earthTexture || !earthBump || !cubeMap)
+	if (!waterTexture || !waterBump || !earthTexture || !earthBump || !cubeMap || !heightmapTex)
 		return;
 
 	SetTextureRepeating(waterTexture, true);
 	SetTextureRepeating(waterBump, true);
 	SetTextureRepeating(earthTexture, true);
 	SetTextureRepeating(earthBump, true);
+	SetTextureRepeating(heightmapTex, true);
 #pragma endregion
 
 	heightMapNode->SetTexture(&earthTexture);
 	water->SetTexture(&waterTexture);
+	water->SetBumpMapTexture(&waterBump);
+	water->SetCubeMapTexture(&cubeMap);
+	water->SetHeightMapTexture(&heightmapTex);
 
 #pragma region Init Shaders
 	reflectShader = new Shader("reflectVertex.glsl", "reflectFragment.glsl");
@@ -65,7 +71,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 #pragma endregion
 
 	heightMapNode->SetShader(defaultShader);
-	water->SetShader(defaultShader);
+	water->SetShader(reflectShader);
 
 	camera = new Camera(-45.0f, 0.0f, 0.0f, heightmapSize * Vector3(0.5f, 5.0f, 0.5f));
 
@@ -157,20 +163,11 @@ void Renderer::DrawNode(SceneNode* n) {
 	if (n->GetMesh()) {
 		Shader* currentShader = n->GetShader();
 		BindShader(currentShader);
+		glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "cameraPos"), 1, (float*)&camera->GetPosition());
+		n->SetShaderVariables();
+		modelMatrix = n->GetModelMat();
+		textureMatrix = n->GetTextureMat();
 		UpdateShaderMatrices();
-
-		/*		Matrix4 tex = Matrix4::Translation(Vector3(waterCycle, 0.0f, waterCycle)) *
-			Matrix4::Scale(Vector3(10, 10, 10)) *
-			Matrix4::Rotation(waterRotate, Vector3(0, 0, 1)); */
-
-		Matrix4 model = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
-		glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "modelMatrix"), 1, false, model.values);
-		glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "nodeColour"), 1, (float*)& n->GetColour());
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, *(n->GetTexture()));
-
-		glUniform1i(glGetUniformLocation(currentShader->GetProgram(), "useTexture"), *(n->GetTexture()));
 
 		n->Draw(*this);
 	}
@@ -206,10 +203,12 @@ void Renderer::RenderScene() {
 	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	glStencilMask(0xFF);
 
-	glDisable(GL_DEPTH_TEST);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	DrawDebugNodes();
+	//glDisable(GL_DEPTH_TEST);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//DrawDebugNodes();
 
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//glEnable(GL_DEPTH_TEST);
 	ClearNodeLists();
 }
 

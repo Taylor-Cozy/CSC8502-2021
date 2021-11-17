@@ -1,27 +1,26 @@
 #include "WaterNode.h"
 
-WaterNode::WaterNode(Mesh* m, Vector4 colour) : SceneNode(m, colour)
+WaterNode::WaterNode(Vector3 hSize, Mesh* m, Vector4 colour) : SceneNode(m, colour), hSize(hSize)
 {
 }
 
 WaterNode::~WaterNode(void) {}
 
-void WaterNode::Update(float dt) {
+void WaterNode::UpdateVariables(float dt) {
+
 	waterCycle += dt * 0.025f;
 	waterRotate += dt * 0.20f;
 	time += dt;
 }
 
-void WaterNode::Draw(const OGLRenderer& r) {
+void WaterNode::SetShaderVariables()
+{
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "bumpTex"), 1);
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "cubeTex"), 2);
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "heightmapTex"), 3);
 
-	glUniform3fv(glGetUniformLocation(shader->GetProgram(), "cameraPos"), 1, (float*)& camera->GetPosition());
-
-	glUniform1i(glGetUniformLocation(reflectShader->GetProgram(), "diffuseTex"), 0);
-	glUniform1i(glGetUniformLocation(reflectShader->GetProgram(), "cubeTex"), 2);
-	glUniform1i(glGetUniformLocation(reflectShader->GetProgram(), "bumpTex"), 1);
-	glUniform1i(glGetUniformLocation(reflectShader->GetProgram(), "heightmapTex"), 3);
-
-	glUniform1f(glGetUniformLocation(reflectShader->GetProgram(), "time"), time);
+	glUniform1f(glGetUniformLocation(shader->GetProgram(), "time"), time);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, *texture);
@@ -34,4 +33,14 @@ void WaterNode::Draw(const OGLRenderer& r) {
 
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, *heightMapTex);
+
+	modelMat =
+		Matrix4::Translation(hSize * 0.5f) * Matrix4::Translation(Vector3(0, sin(time), 0)) *
+		Matrix4::Scale(hSize * 0.5f) *
+		Matrix4::Rotation(90, Vector3(1, 0, 0));
+
+	textureMat =
+		Matrix4::Translation(Vector3(waterCycle, 0.0f, waterCycle)) *
+		Matrix4::Scale(Vector3(10, 10, 10)) *
+		Matrix4::Rotation(waterRotate, Vector3(0, 0, 1));
 }

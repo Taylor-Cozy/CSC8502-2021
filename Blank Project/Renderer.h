@@ -1,6 +1,6 @@
 #pragma once
 #include "../NCLGL/OGLRenderer.h"
-#include "../nclgl/SceneNode.h"
+#include "../nclgl/WaterNode.h"
 #include "../nclgl/Frustum.h"
 
 class Camera;
@@ -53,6 +53,7 @@ protected:
 	GLuint earthBump;
 	GLuint waterTexture;
 	GLuint waterBump;
+	GLuint heightmapTex;
 
 	Frustum frameFrustum;
 
