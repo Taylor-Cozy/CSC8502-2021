@@ -39,13 +39,13 @@ public:
 	Mesh* GetMesh() const { return mesh; }
 	void SetMesh(Mesh* m) { mesh = m; }
 
+	Shader* GetShader() const { return shader; }
+	void SetShader(Shader* sh) { shader = sh; }
+
 	void AddChild(SceneNode* s);
 	void RemoveChild(SceneNode* s);
 	virtual void Update(float dt);
 	virtual void Draw(const OGLRenderer& r);
-
-	Shader* GetShader() const { return shader; }
-	void SetShader(Shader* sh) { shader = sh; }
 
 	std::vector<SceneNode*>::const_iterator GetChildIteratorStart() { return children.begin(); }
 	std::vector<SceneNode*>::const_iterator GetChildIteratorEnd() { return children.end(); }

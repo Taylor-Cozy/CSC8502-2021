@@ -10,6 +10,7 @@ SceneNode::SceneNode(Mesh* mesh, Vector4 colour) {
 	boundingVol = &BoundingBox(Vector3(1,1,1), worldTransform);
 	distanceFromCamera = 0.0f;
 	texture = 0;
+	textureMatrix.ToIdentity();
 }
 
 SceneNode::~SceneNode(void) {

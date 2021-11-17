@@ -65,7 +65,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 #pragma endregion
 
 	heightMapNode->SetShader(defaultShader);
-	water->SetShader(reflectShader);
+	water->SetShader(defaultShader);
 
 	camera = new Camera(-45.0f, 0.0f, 0.0f, heightmapSize * Vector3(0.5f, 5.0f, 0.5f));
 
@@ -90,6 +90,9 @@ void Renderer::UpdateScene(float dt) {
 	camera->UpdateCamera(dt);
 	viewMatrix = camera->BuildViewMatrix();
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
+
+	waterRotate += dt * .20f;
+	waterCycle += dt * 0.025f;
 
 	root->Update(dt);
 }
@@ -155,6 +158,10 @@ void Renderer::DrawNode(SceneNode* n) {
 		Shader* currentShader = n->GetShader();
 		BindShader(currentShader);
 		UpdateShaderMatrices();
+
+		/*		Matrix4 tex = Matrix4::Translation(Vector3(waterCycle, 0.0f, waterCycle)) *
+			Matrix4::Scale(Vector3(10, 10, 10)) *
+			Matrix4::Rotation(waterRotate, Vector3(0, 0, 1)); */
 
 		Matrix4 model = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
 		glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "modelMatrix"), 1, false, model.values);

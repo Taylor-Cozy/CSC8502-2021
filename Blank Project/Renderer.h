@@ -30,6 +30,9 @@ protected:
 
 	void DrawSkyBox();
 
+	float waterRotate = 0.0f;
+	float waterCycle = 0.0f;
+
 	SceneNode* root;
 	Camera* camera;
 	HeightMap* heightmap;
