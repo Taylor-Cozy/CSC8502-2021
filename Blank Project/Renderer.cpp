@@ -8,7 +8,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	
 	quad = Mesh::GenerateQuad();
 	debugCube = Mesh::LoadFromMeshFile("cube.msh");
-	heightmap = new HeightMap(TEXTUREDIR"noise.png");
+	heightmap = new HeightMap(TEXTUREDIR"noise2.png");
 	Vector3 heightmapSize = heightmap->GetHeightMapSize();
 
 	root = new SceneNode();
@@ -36,7 +36,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	waterBump = SOIL_load_OGL_texture(TEXTUREDIR"waterbump.PNG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthTexture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-	heightmapTex = SOIL_load_OGL_texture(TEXTUREDIR"noise.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	heightmapTex = SOIL_load_OGL_texture(TEXTUREDIR"noise2.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	cubeMap = SOIL_load_OGL_cubemap(
 		TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
 		TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
