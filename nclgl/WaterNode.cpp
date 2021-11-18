@@ -35,12 +35,12 @@ void WaterNode::SetShaderVariables()
 	glBindTexture(GL_TEXTURE_2D, *heightMapTex);
 
 	modelMat =
-		Matrix4::Translation(hSize * 0.5f) * Matrix4::Translation(Vector3(0, sin(time), 0)) *
+		Matrix4::Translation(Vector3(hSize.x * 0.5f, hSize.y * 0.2f, hSize.z * 0.5f)) * Matrix4::Translation(Vector3(0, sin(time), 0)) *
 		Matrix4::Scale(hSize * 0.5f) *
 		Matrix4::Rotation(90, Vector3(1, 0, 0));
 
 	textureMat =
 		Matrix4::Translation(Vector3(waterCycle, 0.0f, waterCycle)) *
-		Matrix4::Scale(Vector3(10, 10, 10)) *
+		Matrix4::Scale(Vector3(20, 20, 20)) *
 		Matrix4::Rotation(waterRotate, Vector3(0, 0, 1));
 }

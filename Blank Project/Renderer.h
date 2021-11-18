@@ -1,6 +1,7 @@
 #pragma once
 #include "../NCLGL/OGLRenderer.h"
 #include "../nclgl/WaterNode.h"
+#include "../nclgl/SceneNode.h"
 #include "../nclgl/Frustum.h"
 
 class Camera;

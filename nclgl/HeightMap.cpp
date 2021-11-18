@@ -1,14 +1,17 @@
 #include "HeightMap.h"
 #include <iostream>
 
-HeightMap::HeightMap(const std::string& name)
+HeightMap::HeightMap(const std::string& firstOctave, const std::string& secondOctave, const std::string& thirdOctave, const std::string& squareGradient)
 {
 	type = GL_TRIANGLES;
 
 	int iWidth, iHeight, iChans;
-	unsigned char* data = SOIL_load_image(name.c_str(), &iWidth, &iHeight, &iChans, 1);
+	unsigned char* firstOct = SOIL_load_image(firstOctave.c_str(), &iWidth, &iHeight, &iChans, 1);
+	unsigned char* secondOct = SOIL_load_image(secondOctave.c_str(), &iWidth, &iHeight, &iChans, 1);
+	unsigned char* thirdOct = SOIL_load_image(thirdOctave.c_str(), &iWidth, &iHeight, &iChans, 1);
+	unsigned char* squareGrad = SOIL_load_image(squareGradient.c_str(), &iWidth, &iHeight, &iChans, 1);
 
-	if (!data) {
+	if (!firstOct || !secondOct || !thirdOct) {
 		std::cout << "Heightmap couldn't be loaded!" << std::endl;
 		return;
 	}
@@ -20,19 +23,23 @@ HeightMap::HeightMap(const std::string& name)
 	indices = new GLuint[numIndices];
 	colours = new Vector4[numVertices];
 
-	Vector3 vertexScale = Vector3(16.0f, 1.0f, 16.0f);
+	Vector3 vertexScale = Vector3(16.0f, 2.5f, 16.0f);
 	Vector2 textureScale = Vector2(1 / 16.0f, 1 / 16.0f);
 
 	for (int z = 0; z < iHeight; z++) {
 		for (int x = 0; x < iWidth; x++) {
 			int offset = (z * iWidth) + x;
-			//std::cout << (int)data[offset] << std::endl;
-			vertices[offset] = Vector3(x, data[offset], z) * vertexScale;
+			//std::cout << (int)firstOct[offset] << std::endl;
+			float height = (firstOct[offset] + (0.25 * secondOct[offset]) + (0.025 * thirdOct[offset])) - squareGrad[offset];
+			vertices[offset] = Vector3(x, height, z) * vertexScale;
 			textureCoords[offset] = Vector2(x, z) * textureScale;
-			colours[offset] = Vector4(data[offset] / 255.0f, 0, 0, 1);
+			colours[offset] = Vector4(height / 255.0f, 0, 0, 1);
 		}
 	}
-	SOIL_free_image_data(data);
+	SOIL_free_image_data(firstOct);
+	SOIL_free_image_data(secondOct);
+	SOIL_free_image_data(thirdOct);
+	SOIL_free_image_data(squareGrad);
 
 	int i = 0;
 
@@ -60,4 +67,12 @@ HeightMap::HeightMap(const std::string& name)
 	heightmapSize.x = vertexScale.x * (iWidth - 1);
 	heightmapSize.y = vertexScale.y * 255.0f;
 	heightmapSize.z = vertexScale.z * (iHeight - 1);
+}
+
+float HeightMap::GenerateHeight(int x, int z, int iWidth, int iHeight)
+{
+
+	int offset = (z * iWidth) + x;
+
+	return 0.0f;
 }

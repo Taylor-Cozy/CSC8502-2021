@@ -2,13 +2,15 @@
 #include "../nclgl/Camera.h"
 #include "../nclgl/HeightMap.h"
 #include "../nclgl/BoundingBox.h"
+#include "../nclgl/WaterNode.h"
+#include "../nclgl/SceneNode.h"
 
 
 Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	
 	quad = Mesh::GenerateQuad();
 	debugCube = Mesh::LoadFromMeshFile("cube.msh");
-	heightmap = new HeightMap(TEXTUREDIR"noise2.png");
+	heightmap = new HeightMap(TEXTUREDIR"noise1.png", TEXTUREDIR"noise2.png", TEXTUREDIR"noise3.png", TEXTUREDIR"squareGradient.png");
 	Vector3 heightmapSize = heightmap->GetHeightMapSize();
 
 	root = new SceneNode();
@@ -36,14 +38,24 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	waterBump = SOIL_load_OGL_texture(TEXTUREDIR"waterbump.PNG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthTexture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-	heightmapTex = SOIL_load_OGL_texture(TEXTUREDIR"noise2.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	heightmapTex = SOIL_load_OGL_texture(TEXTUREDIR"noise1.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	cubeMap = SOIL_load_OGL_cubemap(
 		TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
 		TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
 		TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg",
 		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
 
-	if (!waterTexture || !waterBump || !earthTexture || !earthBump || !cubeMap || !heightmapTex)
+	if (!waterTexture)
+		return;
+	if (!waterBump)
+		return;
+	if (!earthTexture)
+		return;
+	if (!earthBump)
+		return;
+	if (!cubeMap)
+		return;
+	if (!heightmapTex)
 		return;
 
 	SetTextureRepeating(waterTexture, true);

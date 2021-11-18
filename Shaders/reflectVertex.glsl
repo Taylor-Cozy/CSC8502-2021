@@ -14,7 +14,6 @@ in vec4 colour;
 out Vertex {
     vec4 colour;
     vec2 texCoord;
-    vec2 seaFoamTexCoord;
     vec3 normal;
     vec3 tangent;
     vec3 binormal;
@@ -24,7 +23,6 @@ out Vertex {
 void main(void) {
     OUT.colour = colour;
     OUT.texCoord = (textureMatrix * vec4(texCoord,0.0,1.0)).xy;
-    OUT.seaFoamTexCoord = texCoord;
     mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
 
     vec3 wNormal = normalize(normalMatrix * normalize(normal));
