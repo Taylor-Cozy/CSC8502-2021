@@ -23,7 +23,7 @@ void WaterNode::SetShaderVariables()
 	glUniform1f(glGetUniformLocation(shader->GetProgram(), "time"), time);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, *texture);
+	glBindTexture(GL_TEXTURE_2D, *diffuseTex);
 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, *cubeTex);

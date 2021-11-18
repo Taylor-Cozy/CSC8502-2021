@@ -5,7 +5,6 @@
 #include "../nclgl/WaterNode.h"
 #include "../nclgl/SceneNode.h"
 
-
 Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	
 	quad = Mesh::GenerateQuad();
@@ -36,13 +35,17 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 #pragma region Init Textures
 	waterTexture = SOIL_load_OGL_texture(TEXTUREDIR"water.TGA", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	waterBump = SOIL_load_OGL_texture(TEXTUREDIR"waterbump.PNG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-	earthTexture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	earthTexture = SOIL_load_OGL_texture(TEXTUREDIR"grass2.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"grass2bump.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	sandTexture = SOIL_load_OGL_texture(TEXTUREDIR"sand.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	sandBump = SOIL_load_OGL_texture(TEXTUREDIR"sandBump.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	heightmapTex = SOIL_load_OGL_texture(TEXTUREDIR"noise1.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	cubeMap = SOIL_load_OGL_cubemap(
-		TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
-		TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
-		TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg",
+		TEXTUREDIR"Daylight Box_Right.bmp", TEXTUREDIR"Daylight Box_Left.bmp",
+		TEXTUREDIR"Daylight Box_Top.bmp", TEXTUREDIR"Daylight Box_Bottom.bmp",
+		TEXTUREDIR"Daylight Box_Front.bmp", TEXTUREDIR"Daylight Box_Back.bmp",
+		
+		
 		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
 
 	if (!waterTexture)
@@ -57,15 +60,22 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 		return;
 	if (!heightmapTex)
 		return;
+	if (!sandTexture)
+		return;
+	if (!sandBump)
+		return;
 
 	SetTextureRepeating(waterTexture, true);
 	SetTextureRepeating(waterBump, true);
 	SetTextureRepeating(earthTexture, true);
 	SetTextureRepeating(earthBump, true);
+	SetTextureRepeating(sandTexture, true);
+	SetTextureRepeating(sandBump, true);
 	SetTextureRepeating(heightmapTex, true);
 #pragma endregion
 
 	heightMapNode->SetTexture(&earthTexture);
+	heightMapNode->SetSecondaryTexture(&sandTexture);
 	water->SetTexture(&waterTexture);
 	water->SetBumpMapTexture(&waterBump);
 	water->SetCubeMapTexture(&cubeMap);
@@ -75,7 +85,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	reflectShader = new Shader("reflectVertex.glsl", "reflectFragment.glsl");
 	skyboxShader = new Shader("skyboxVertex.glsl", "skyboxFragment.glsl");
 	lightShader = new Shader("PerPixelVertex.glsl", "PerPixelFragment.glsl");
-	defaultShader = new Shader("SceneVertex.glsl", "SceneFragment.glsl");
+	defaultShader = new Shader("MultipleTextureVert.glsl", "MultipleTextureFragment.glsl");
 
 	if (!lightShader->LoadSuccess() || !defaultShader->LoadSuccess() ||
 		!reflectShader->LoadSuccess() || !skyboxShader->LoadSuccess())

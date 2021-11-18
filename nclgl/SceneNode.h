@@ -19,8 +19,14 @@ public:
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
 
-	GLuint* GetTexture() const { return texture; }
-	void SetTexture(GLuint* tex) { texture = tex; }
+	GLuint* GetTexture() const { return diffuseTex; }
+	void SetTexture(GLuint* tex) { diffuseTex = tex; }
+	void SetSecondaryTexture(GLuint* tex) { 
+		useSecond = true;
+		secondaryTex = tex; }
+	void SetThirdTexture(GLuint* tex) { 
+		useThird = true;
+		thirdTex = tex; }
 
 	static bool CompareByCameraDistance(SceneNode* a, SceneNode* b) {
 		return (a->distanceFromCamera < b->distanceFromCamera) ? true : false;
@@ -59,17 +65,30 @@ public:
 
 protected:
 	SceneNode* parent;
+
 	Mesh* mesh;
 	Shader* shader;
+
 	Matrix4 worldTransform;
 	Matrix4 transform;
 	Vector3 modelScale;
 	Vector4 colour;
+
 	std::vector<SceneNode*> children;
 
 	float distanceFromCamera;
 	BoundingVolume* boundingVol;
-	GLuint* texture;
+
+	GLuint* diffuseTex;
+	GLuint* diffuseBump;
+
+	bool useSecond = false;
+	GLuint* secondaryTex;
+	GLuint* secondaryBump;
+
+	bool useThird = false;
+	GLuint* thirdTex;
+	GLuint* thirdBump;
 
 	Matrix4 modelMat;	//Model matrix. NOT MODELVIEW
 	Matrix4 textureMat;	//Texture matrix

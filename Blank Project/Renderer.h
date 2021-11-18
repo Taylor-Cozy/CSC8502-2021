@@ -54,6 +54,8 @@ protected:
 	GLuint earthBump;
 	GLuint waterTexture;
 	GLuint waterBump;
+	GLuint sandTexture;
+	GLuint sandBump;
 	GLuint heightmapTex;
 
 	Frustum frameFrustum;
