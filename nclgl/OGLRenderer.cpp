@@ -18,7 +18,7 @@ _-_-_-_-_-_-_-""  ""
 
 using std::string;
 
-const int MAX_LIGHTS = 64;
+const int MAX_LIGHTS = 128;
 
 static const float biasValues[16] = {
 	0.5, 0.0, 0.0, 0.0,
@@ -177,7 +177,6 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 		lightTypes[i] = l[i]->GetType();
 		shadowMatrices[i] = l[i]->GetShadowMatrix();
 		useShadows[i] = l[i]->CheckCastShadows() ? 1 : 0;
-		//std::cout << "Cast Shadows: " << l[i]->CheckCastShadows() << std::endl;
 	}
 
 	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), MAX_LIGHTS, (float*)&positions);

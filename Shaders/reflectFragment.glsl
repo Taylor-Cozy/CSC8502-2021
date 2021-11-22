@@ -34,5 +34,4 @@ void main(void){
     vec4 reflectTex = texture(cubeTex, reflectDir);
 
     fragColour *= reflectTex + (diffuse * 0.25);
-
 }

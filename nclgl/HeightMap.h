@@ -9,9 +9,13 @@ public:
 	~HeightMap(void) {};
 
 	Vector3 GetHeightMapSize() const { return heightmapSize; }
+	float GetHeightAtLocation(Vector3 location) const {
+		return heights[((int)(location.z/16.0f) * width) + (int)(location.x/16.0f)];
+	};
 protected:
-	float GenerateHeight(int x, int z, int iWidth, int iHeight);
 
 	Vector3 heightmapSize;
+	vector<float> heights;
+	int width;
 };
 

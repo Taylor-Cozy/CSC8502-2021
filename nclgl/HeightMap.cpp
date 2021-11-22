@@ -16,6 +16,7 @@ HeightMap::HeightMap(const std::string& firstOctave, const std::string& secondOc
 		return;
 	}
 
+	width = iWidth;
 	numVertices = iWidth * iHeight;
 	numIndices = (iWidth - 1) * (iHeight - 1) * 6;
 	vertices = new Vector3[numVertices];
@@ -30,7 +31,8 @@ HeightMap::HeightMap(const std::string& firstOctave, const std::string& secondOc
 		for (int x = 0; x < iWidth; x++) {
 			int offset = (z * iWidth) + x;
 			//std::cout << (int)firstOct[offset] << std::endl;
-			float height = (firstOct[offset] + (0.25 * secondOct[offset]) + (0.025 * thirdOct[offset])) - squareGrad[offset];
+			float height = ((0.75 * firstOct[offset]) + (0.25 * secondOct[offset]) + (0.0 * thirdOct[offset])) - squareGrad[offset];
+			heights.push_back(height * vertexScale.y);
 			vertices[offset] = Vector3(x, height, z) * vertexScale;
 			textureCoords[offset] = Vector2(x, z) * textureScale;
 			colours[offset] = Vector4(height / 255.0f, 0, 0, 1);
@@ -69,10 +71,3 @@ HeightMap::HeightMap(const std::string& firstOctave, const std::string& secondOc
 	heightmapSize.z = vertexScale.z * (iHeight - 1);
 }
 
-float HeightMap::GenerateHeight(int x, int z, int iWidth, int iHeight)
-{
-
-	int offset = (z * iWidth) + x;
-
-	return 0.0f;
-}

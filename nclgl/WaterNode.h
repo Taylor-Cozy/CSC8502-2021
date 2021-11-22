@@ -12,7 +12,6 @@ public:
 	void SetShaderVariables() override;
 
 	void SetCubeMapTexture(GLuint* t) { cubeTex = t; }
-	void SetBumpMapTexture(GLuint* t) { bumpTex = t; }
 	void SetHeightMapTexture(GLuint* t) { heightMapTex = t; }
 
 protected:
@@ -22,7 +21,6 @@ protected:
 	float time = 0.0f;
 
 	GLuint* cubeTex;
-	GLuint* bumpTex;
 	GLuint* heightMapTex;
 	
 	Vector3 hSize;

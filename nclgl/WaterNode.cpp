@@ -1,6 +1,6 @@
 #include "WaterNode.h"
 
-WaterNode::WaterNode(Vector3 hSize, Mesh* m, Vector4 colour) : SceneNode(m, colour), hSize(hSize)
+WaterNode::WaterNode(Vector3 hSize, Mesh* m, Vector4 colour) : SceneNode(m, colour, false), hSize(hSize)
 {
 }
 
@@ -29,7 +29,7 @@ void WaterNode::SetShaderVariables()
 	glBindTexture(GL_TEXTURE_CUBE_MAP, *cubeTex);
 
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, *bumpTex);
+	glBindTexture(GL_TEXTURE_2D, *diffuseBump);
 
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, *heightMapTex);

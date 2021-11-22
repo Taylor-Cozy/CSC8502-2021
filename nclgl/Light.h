@@ -3,6 +3,7 @@
 #include "Vector4.h"
 #include "Vector3.h"
 #include "Mesh.h"
+#include <vector>
 
 enum lightType {
 	POINT_LIGHT,
@@ -45,7 +46,6 @@ public:
 	bool CheckCastShadows() const { return castShadows; }
 
 protected:
-	void CreateFBO();
 	float radius;
 	Vector3 position;
 	Vector4 colour;

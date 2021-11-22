@@ -9,6 +9,7 @@ class SceneNode;
 class Mesh;
 class Shader;
 class HeightMap;
+class Light;
 
 class Renderer : public OGLRenderer	{
 public:
@@ -23,31 +24,49 @@ protected:
 	void SortNodeLists();
 	void ClearNodeLists();
 
-	void DrawNodes();
-	void DrawNode(SceneNode* n);
+	void DrawNodes(bool shadowPass = false);
+	void DrawNode(SceneNode* n, bool shadowPass);
 
 	void DrawDebugNodes();
 	void DrawDebugNode(SceneNode* n);
 
 	void DrawSkyBox();
 
-	float waterRotate = 0.0f;
-	float waterCycle = 0.0f;
+	void FillBuffers();
+	void DrawPointLights();
+	void CombineBuffers();
+
+	void GenerateScreenTexture(GLuint& into, bool depth = false);
+
+	void DrawShadowScene();
+	void DrawPointShadowScene();
+	void DrawMainScene();
+
+	void PresentScene();
+	void DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses = 1);
 
 	SceneNode* root;
+
 	Camera* camera;
+	Camera* mapView;
+
+	float time = 0.0f;
 	HeightMap* heightmap;
-
-	Shader* lightShader;
-	Shader* defaultShader;
-	Shader* reflectShader;
-	Shader* skyboxShader;
-
 	Mesh* debugCube;
 	Mesh* cube;
 	Mesh* sphere;
 	Mesh* quad;
 	Mesh* circle;
+
+	Shader* lightShader;
+	Shader* defaultShader;
+	Shader* reflectShader;
+	Shader* skyboxShader;
+	Shader* sceneShader;
+	Shader* combineShader;
+	Shader* shadowShader;
+	Shader* processShader;
+	Shader* mapProcessShader;
 
 	GLuint cubeMap;
 	GLuint earthTexture;
@@ -57,9 +76,34 @@ protected:
 	GLuint sandTexture;
 	GLuint sandBump;
 	GLuint heightmapTex;
+	GLuint rockTexture;
+	GLuint rockBump;
+
+	GLuint shadowFBO;
+	GLuint shadowTex;
+	GLuint bufferFBO;
+	GLuint mapFBO;
+	GLuint processFBO;
+
+	GLuint bufferColourTex[2];
+	GLuint mapColourTex[2];
+	GLuint bufferDepthTex;
+	GLuint mapDepthTex;
+
+	GLuint shadowCubeFBO;
+	GLuint shadowCubeTex;
 
 	Frustum frameFrustum;
 
 	vector<SceneNode*> transparentNodeList;
 	vector<SceneNode*> nodeList;
+	vector<SceneNode*> lightNodeList;
+	vector<Light*> lights;
+	Light* pointLight;
+	Light* pointLight2;
+
+	Matrix4 rotation[6];
+	Matrix4 mapViewMatrix;
+	Matrix4 mapProjMatrix;
+	Matrix4 sceneViewMatrix;
 };

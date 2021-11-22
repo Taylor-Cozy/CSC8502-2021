@@ -10,7 +10,7 @@
 class SceneNode
 {
 public:
-	SceneNode(Mesh* m = NULL, Vector4 colour = Vector4(1, 1, 1, 1));
+	SceneNode(Mesh* m = NULL, Vector4 colour = Vector4(1, 1, 1, 1), bool shadowExempt = false);
 	~SceneNode(void);
 
 	BoundingVolume* GetBoundingVolume() const { return boundingVol; }
@@ -20,13 +20,34 @@ public:
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
 
 	GLuint* GetTexture() const { return diffuseTex; }
-	void SetTexture(GLuint* tex) { diffuseTex = tex; }
-	void SetSecondaryTexture(GLuint* tex) { 
+	void SetTexture(GLuint* tex) { 
+		useTexture = 1;
+		diffuseTex = tex; }
+	void SetBumpMapTexture(GLuint* t) { diffuseBump = t; }
+	void SetSecondaryTexture(GLuint* tex, GLuint* bump) {
 		useSecond = true;
-		secondaryTex = tex; }
-	void SetThirdTexture(GLuint* tex) { 
+		secondaryTex = tex;
+		secondaryBump = bump;
+	}
+	void SetThirdTexture(GLuint* tex, GLuint* bump) {
 		useThird = true;
-		thirdTex = tex; }
+		thirdTex = tex; 
+		thirdBump = bump;
+	}
+
+	void SetLight(Light* l) {
+		light = l;
+		isLight = true;
+	}
+
+	bool IsLight() const { return isLight; }
+
+	void SetShadowTex(GLuint* tex) {
+		useShadows = true;
+		shadowTex = tex;
+	}
+
+	bool CheckShadowExempt() const { return shadowExempt; }
 
 	static bool CompareByCameraDistance(SceneNode* a, SceneNode* b) {
 		return (a->distanceFromCamera < b->distanceFromCamera) ? true : false;
@@ -58,7 +79,13 @@ public:
 
 	virtual void Update(float dt);
 	virtual void Draw(const OGLRenderer& r);
-	virtual void UpdateVariables(float dt) {};
+	virtual void UpdateVariables(float dt) {
+		time += dt;
+		if (isLight) {
+			transform = transform * Matrix4::Translation(Vector3(0, sin(time) / 100.0f, 0));
+			light->SetPosition(transform.GetPositionVector());
+		}
+	};
 
 	std::vector<SceneNode*>::const_iterator GetChildIteratorStart() { return children.begin(); }
 	std::vector<SceneNode*>::const_iterator GetChildIteratorEnd() { return children.end(); }
@@ -76,9 +103,12 @@ protected:
 
 	std::vector<SceneNode*> children;
 
+	float time = 0.0f;
+
 	float distanceFromCamera;
 	BoundingVolume* boundingVol;
 
+	int useTexture = 0;
 	GLuint* diffuseTex;
 	GLuint* diffuseBump;
 
@@ -89,6 +119,13 @@ protected:
 	bool useThird = false;
 	GLuint* thirdTex;
 	GLuint* thirdBump;
+
+	bool isLight = false;
+	Light* light;
+
+	bool useShadows = false;
+	bool shadowExempt;
+	GLuint* shadowTex;
 
 	Matrix4 modelMat;	//Model matrix. NOT MODELVIEW
 	Matrix4 textureMat;	//Texture matrix

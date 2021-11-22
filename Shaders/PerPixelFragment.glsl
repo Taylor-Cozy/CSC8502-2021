@@ -2,6 +2,8 @@
 #define MAX_LIGHTS 64
 
 uniform sampler2D diffuseTex;
+uniform sampler2D secondaryTex;
+
 uniform vec3 cameraPos;
 uniform vec4 lightColour[MAX_LIGHTS];
 uniform vec4 specLightColour[MAX_LIGHTS];
@@ -22,7 +24,15 @@ vec4 ambientLight = vec4(1,1,1,1);
 out vec4 fragColour;
 
 void main(void) {
-    vec4 diffuse = texture(diffuseTex, IN.texCoord);
+    vec4 diffuse;
+
+    if(IN.worldPos.y < 170){
+        diffuse = texture(secondaryTex, IN.texCoord);
+    } else if(IN.worldPos.y < 200) {
+        diffuse = mix(texture(diffuseTex, IN.texCoord),texture(secondaryTex, IN.texCoord), (200 - IN.worldPos.y) / 30.0);
+    } else {
+        diffuse = texture(diffuseTex, IN.texCoord);
+    }
 
     for(int i = 0; i < numberOfLights; i++){
 
@@ -44,7 +54,7 @@ void main(void) {
         float lambert = max(dot(incident, IN.normal), 0.0);
 
         float specFactor = clamp(dot(halfDir, IN.normal), 0.0, 1.0);
-        specFactor = pow(specFactor, 60.0);
+        specFactor = pow(specFactor, 60.0) * 0.0;
 
         vec3 surface = (diffuse.rgb * lightColour[i].rgb);
         currentColour.rgb = surface * lambert * attenuation;
@@ -53,6 +63,7 @@ void main(void) {
 
         fragColour += currentColour;
     }
+
     fragColour += ambientLight * .1;
     
     // FOG

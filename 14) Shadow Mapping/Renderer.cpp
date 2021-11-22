@@ -88,13 +88,14 @@ void Renderer::DrawShadowScene() {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	int counter = 0;
 	int xOffset = 0; int yOffset = 0;
+	int size = 2048;
 	for (auto light : lights) {
-		glViewport(0 + xOffset, 0 + yOffset, 2048, 2048);
+		glViewport(0 + xOffset, 0 + yOffset, size, size);
 
-		xOffset += 2048;
+		xOffset += size;
 		if (xOffset == SHADOWSIZE) {
 			xOffset = 0;
-			yOffset += 2048;
+			yOffset += size;
 		}
 
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
