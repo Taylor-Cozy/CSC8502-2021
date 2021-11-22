@@ -29,4 +29,6 @@ void main(void){
         vec4 tmp = texture2D(sceneTex, IN.texCoord.xy + offset);
         fragColour += tmp * scaleFactors[i];
     }
+
+    fragColour *= vec4(0.97,0.97,0.999, 1.0);
 }

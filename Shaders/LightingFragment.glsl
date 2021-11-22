@@ -8,6 +8,7 @@ uniform sampler2D secondaryBump;
 uniform sampler2D thirdTex;
 uniform sampler2D thirdBump;
 uniform sampler2D shadowTex;
+uniform samplerCube shadowCube;
 
 uniform int useTexture;
 
@@ -19,6 +20,7 @@ uniform float numberOfLights;
 uniform int lightType[MAX_LIGHTS];
 uniform int useShadows[MAX_LIGHTS];
 uniform mat4 shadowMatrices[MAX_LIGHTS];
+uniform vec2 shadowTexOffsets[MAX_LIGHTS];
 
 uniform vec4 nodeColour;
 
@@ -34,7 +36,6 @@ in Vertex {
 
 vec4 sky = vec4(0.2,0.2,0.2,1.0);
 vec4 ambientLight = vec4(1,1,1,1);
-float xOffset = 0; float yOffset = 0;
 out vec4 fragColour;
 
 void main(void) {
@@ -42,18 +43,22 @@ void main(void) {
     
     vec4 diffuse;
     float wetness = 1.0;
+    
     if(useTexture > 0){
+
+        if(abs(IN.normal.x) > 0.25 || abs(IN.normal.z) > 0.25){
+            diffuse = mix(texture(diffuseTex, IN.texCoord),texture(thirdTex, IN.texCoord), (max(abs(IN.normal.x) , abs(IN.normal.z)) - 0.25) * 4) ;
+        } else {
+            diffuse = texture(diffuseTex, IN.texCoord);
+        }
+
         if(IN.worldPos.y < 160){
             diffuse = texture(secondaryTex, IN.texCoord);
         } else if(IN.worldPos.y < 190) {
-            diffuse = mix(texture(diffuseTex, IN.texCoord),texture(secondaryTex, IN.texCoord), (190 - IN.worldPos.y) / 30.0);
+            diffuse = mix(diffuse,texture(secondaryTex, IN.texCoord), (190 - IN.worldPos.y) / 30.0);
             wetness = ((190 - IN.worldPos.y) / 30.0) + 0.2;
         } else {
-            if(abs(IN.normal.x) > 0.25 || abs(IN.normal.z) > 0.25){
-                diffuse = mix(texture(diffuseTex, IN.texCoord),texture(thirdTex, IN.texCoord), (max(abs(IN.normal.x) , abs(IN.normal.z)) - 0.25) * 4) ;
-            } else {
-                diffuse = texture(diffuseTex, IN.texCoord);
-            }
+
             wetness = 0.2;
         }
     } else {
@@ -88,16 +93,17 @@ void main(void) {
             mat3 TBN = mat3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
             
             vec3 bumpNormal;
+
+            if(abs(IN.normal.x) > 0.25 || abs(IN.normal.z) > 0.25){
+                bumpNormal = mix(texture(diffuseBump, IN.texCoord),texture(thirdBump, IN.texCoord), (max(abs(IN.normal.x) , abs(IN.normal.z)) - 0.25) * 4).rgb;
+            } else {
+                bumpNormal = texture(diffuseBump, IN.texCoord).rgb;
+            }
+
             if(IN.worldPos.y < 160){
                 bumpNormal = texture(secondaryBump, IN.texCoord).rgb;
             } else if(IN.worldPos.y < 190) {
-                bumpNormal = mix(texture(diffuseBump, IN.texCoord),texture(secondaryBump, IN.texCoord), (190 - IN.worldPos.y) / 30.0).rgb;
-            } else {
-                if(abs(IN.normal.x) > 0.25 || abs(IN.normal.z) > 0.25){
-                    bumpNormal = mix(texture(diffuseBump, IN.texCoord),texture(thirdBump, IN.texCoord), (max(abs(IN.normal.x) , abs(IN.normal.z)) - 0.25) * 4).rgb;
-                } else {
-                    bumpNormal = texture(diffuseBump, IN.texCoord).rgb;
-                }
+                bumpNormal = mix(bumpNormal,texture(secondaryBump, IN.texCoord).rgb, (190 - IN.worldPos.y) / 30.0);
             }
 
             bumpNormal = normalize(TBN * normalize((bumpNormal * 2.0) - 1.0));
@@ -125,15 +131,10 @@ void main(void) {
                 vec4 shadowProj = shadowMatrices[i] * (IN.worldPos + pushVal);
 
                 vec3 shadowNDC = shadowProj.xyz / shadowProj.w;
-
+                
                 if(abs(shadowNDC.x) < 1.0 && abs(shadowNDC.y) < 1.0 && abs(shadowNDC.z) < 1.0) {
                     vec3 biasCoord = (shadowNDC) * 0.5 + 0.5;
-                    float shadowZ = texture(shadowTex, vec2((biasCoord.x / 2.0) + xOffset, (biasCoord.y / 2.0) + yOffset)).x;
-                    xOffset += 0.5;
-                    if(xOffset == 1.0){
-                        xOffset = 0;
-                        yOffset += 0.5;
-                    }
+                    float shadowZ = texture(shadowTex, vec2((biasCoord.x / 2.0) + shadowTexOffsets[i].x, (biasCoord.y / 2.0) + shadowTexOffsets[i].y)).x;
                     if(shadowZ < biasCoord.z) {
                         shadow = 0.0;
                     }

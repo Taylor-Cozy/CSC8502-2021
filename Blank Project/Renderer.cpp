@@ -66,7 +66,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	lightShader = new Shader("LightingVertex.glsl", "LightingFragment.glsl");
 	defaultShader = new Shader("DefaultVertex.glsl", "DefaultFragment.glsl");
 	shadowShader = new Shader("shadowVert.glsl", "shadowFrag.glsl");
-	processShader = new Shader("ProcessVertex.glsl", "NoProcessFrag.glsl");
+	processShader = new Shader("ProcessVertex.glsl", "BlurFrag.glsl");
 	mapProcessShader = new Shader("ProcessVertex.glsl", "NoProcessFrag.glsl");
 	if (!lightShader->LoadSuccess()		|| !defaultShader->LoadSuccess()	||
 		!reflectShader->LoadSuccess()	|| !skyboxShader->LoadSuccess()		||
@@ -122,10 +122,10 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 
 	Vector3 lightLocation2 = Vector3(heightmapSize.x * 0.7 - 50.0f, 50.0f, heightmapSize.z * 0.4 - 50.0f);
 	lightLocation2 = Vector3(lightLocation2.x, heightmap->GetHeightAtLocation(lightLocation2) + 100.0f, lightLocation2.z);
-	//pointLight = ;
-	//pointLight2 = ;
-	//lights.emplace_back(new Light(lightLocation2, Vector4(0, 0, 1, 1), POINT_LIGHT, 100000.0f, true));
-	//lights.emplace_back(new Light(lightLocation, Vector4(1, 0, 0, 1), POINT_LIGHT, 100000.0f, true));
+	pointLight = new Light(lightLocation2, Vector4(0, 0, 1, 1), POINT_LIGHT, 100000.0f, true);
+	pointLight2 = new Light(lightLocation, Vector4(1, 0, 0, 1), POINT_LIGHT, 100000.0f, true);
+	lights.emplace_back(pointLight);
+	lights.emplace_back(pointLight2);
 
 	SceneNode* testShadow = new SceneNode(sphere);
 	testShadow->SetTransform(Matrix4::Translation(lightLocation) * Matrix4::Translation(Vector3(-70, -25, -70)) * Matrix4::Scale(Vector3(10, 10, 10)));
@@ -140,11 +140,12 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	BoundingBox* shadowBound2 = new BoundingBox(Vector3(50, 50, 50), testShadow2->GetWorldTransform());
 	testShadow2->SetBoundingVolume(shadowBound2);
 	heightMapNode->AddChild(testShadow2);
+
 #pragma endregion
 
 #pragma region Create Lights
 
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 25; i++) {
 		Vector4 col = Vector4((rand() % 10) / 10.0f, (rand() % 10) / 10.0f, (rand() % 10) / 10.0f, 1);
 		SceneNode* lightNode = new SceneNode(sphere, col);
 		Vector3 location;
@@ -309,22 +310,25 @@ void Renderer::UpdateScene(float dt) {
 	camera->UpdateCamera(dt);
 	mapView->UpdateCamera(dt);
 	//viewMatrix = camera->BuildViewMatrix();
-	frameFrustum.FromMatrix(projMatrix * viewMatrix);
+
 
 	time += dt;
 	
-	//Vector3 newPos = Vector3(pointLight->GetPosition().x, pointLight->GetPosition().y + (sin(time) / 10.0f), pointLight->GetPosition().z);
-	//pointLight->SetPosition(newPos);
+	Vector3 newPos = Vector3(pointLight->GetPosition().x, pointLight->GetPosition().y + (sin(time) / 10.0f), pointLight->GetPosition().z);
+	pointLight->SetPosition(newPos);
 
-	//for (auto light : lights) {
-	//	if (light->GetType() == POINT_LIGHT) {
-	//		light->SetPosition(light->GetPosition() + Vector3(0, sin(time) / 2.0f, 0));
-	//	}
-	//	//transform = transform * Matrix4::Translation(Vector3(0, , 0));
-	//}
+	for (auto light : lights) {
+		if (light->GetType() == POINT_LIGHT) {
+			light->SetPosition(light->GetPosition() + Vector3(0, sin(time) / 2.0f, 0));
+		}
+		//transform = transform * Matrix4::Translation(Vector3(0, , 0));
+	}
 
 	mapViewMatrix = mapView->BuildViewMatrix();
 	sceneViewMatrix = camera->BuildViewMatrix();
+
+	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+	frameFrustum.FromMatrix(projMatrix * sceneViewMatrix);
 
 	root->Update(dt);
 }
@@ -434,15 +438,16 @@ void Renderer::RenderScene() {
 	BuildNodeLists(root);
 	SortNodeLists();
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//glEnable(GL_DEPTH_TEST);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_DEPTH_TEST);
 
-	//DrawShadowScene();
+	DrawShadowScene();
 
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	glStencilMask(0xFF);
 	glEnable(GL_DEPTH_TEST);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -461,8 +466,13 @@ void Renderer::RenderScene() {
 	
 	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	glStencilMask(0xFF);
-
-	DrawPostProcess(bufferColourTex, processShader);
+	
+	if (camera->GetPosition().y < 140) {
+		DrawPostProcess(bufferColourTex, processShader, 10);
+	}
+	else {
+		DrawPostProcess(bufferColourTex, mapProcessShader, 1);
+	}
 
 	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_FRAMEBUFFER, mapFBO);
@@ -518,16 +528,17 @@ void Renderer::DrawShadowScene() {
 		if (light->CheckCastShadows()) {
 			glViewport(0 + xOffset, 0 + yOffset, size, size);
 
+			BindShader(shadowShader);
+			viewMatrix = Matrix4::BuildViewMatrix(light->GetPosition(), Vector3(0, 0, 0));
+			projMatrix = Matrix4::Perspective(1, 1000, 1, 90);
+			light->SetShadowMatrix(projMatrix * viewMatrix);
+			light->SetShadowOffset(Vector2(xOffset / (1.0f * SHADOWSIZE), yOffset / (1.0f * SHADOWSIZE)));
+
 			xOffset += size;
 			if (xOffset == SHADOWSIZE) {
 				xOffset = 0;
 				yOffset += size;
 			}
-
-			BindShader(shadowShader);
-			viewMatrix = Matrix4::BuildViewMatrix(light->GetPosition(), Vector3(0, 0, 0));
-			projMatrix = Matrix4::Perspective(1, 1000, 1, 90);
-			light->SetShadowMatrix(projMatrix * viewMatrix);
 
 			DrawNodes(true);
 		}

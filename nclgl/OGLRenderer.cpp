@@ -167,6 +167,7 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 	Vector4 colours[MAX_LIGHTS];
 	Vector4 specColours[MAX_LIGHTS];
 	Matrix4 shadowMatrices[MAX_LIGHTS];
+	Vector2 shadowTexOffsets[MAX_LIGHTS];
 	int useShadows[MAX_LIGHTS];
 	int lightTypes[MAX_LIGHTS];
 
@@ -176,6 +177,7 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 		specColours[i] = l[i]->GetSpecColour();
 		lightTypes[i] = l[i]->GetType();
 		shadowMatrices[i] = l[i]->GetShadowMatrix();
+		shadowTexOffsets[i] = l[i]->GetShadowOffset();
 		useShadows[i] = l[i]->CheckCastShadows() ? 1 : 0;
 	}
 
@@ -188,6 +190,8 @@ void OGLRenderer::SetShaderLights(const vector<Light*> l)
 	glUniform1iv(glGetUniformLocation(currentShader->GetProgram(), "lightType"), MAX_LIGHTS, lightTypes);
 
 	glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "shadowMatrices"), MAX_LIGHTS, false, (float*)&shadowMatrices);
+
+	glUniform2fv(glGetUniformLocation(currentShader->GetProgram(), "shadowTexOffsets"), MAX_LIGHTS, (float*)& shadowTexOffsets);
 
 	glUniform1iv(glGetUniformLocation(currentShader->GetProgram(), "useShadows"), MAX_LIGHTS, useShadows);
 

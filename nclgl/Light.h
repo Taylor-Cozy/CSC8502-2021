@@ -39,6 +39,8 @@ public:
 
 	void SetShadowMatrix(Matrix4 shadMat) { shadowMatrix = shadMat;	}
 	Matrix4 GetShadowMatrix() const { return shadowMatrix; }
+	void SetShadowOffset(Vector2 offset) { shadowTexOffset = offset; }
+	Vector2 GetShadowOffset() const { return shadowTexOffset; }
 
 	float GetRadius() const { return radius; }
 	void SetRadius(float r) { radius = r; }
@@ -53,5 +55,6 @@ protected:
 	lightType type;
 	Matrix4 shadowMatrix;
 	bool castShadows;
+	Vector2 shadowTexOffset = Vector2(0,0);
 };
 

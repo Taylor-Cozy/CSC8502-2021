@@ -67,6 +67,7 @@ protected:
 	Shader* shadowShader;
 	Shader* processShader;
 	Shader* mapProcessShader;
+	Shader* mapSceneShader;
 
 	GLuint cubeMap;
 	GLuint earthTexture;
