@@ -30,5 +30,5 @@ void main(void){
         fragColour += tmp * scaleFactors[i];
     }
 
-    fragColour *= vec4(0.97,0.97,0.999, 1.0);
+    //fragColour *= vec4(0.97,0.97,0.999, 1.0);
 }

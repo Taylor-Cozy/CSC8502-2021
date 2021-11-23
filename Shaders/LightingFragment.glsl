@@ -70,14 +70,14 @@ void main(void) {
     }
 
     for(int i = 0; i < numberOfLights; i++){
-        if(distance(IN.worldPos.xyz, lightPos[i]) < 500 || lightType[i] == 1){
+        float distance = distance(IN.worldPos.xyz, lightPos[i]);
+        if( distance < 500 || lightType[i] == 1){
             vec4 currentColour = vec4(0,0,0,0);
             float attenuation = 1.0;
             vec3 incident;
 
             if(lightType[i] == 0){ // POINT
                 incident = normalize(lightPos[i] - IN.worldPos.xyz);
-                float distance = length(lightPos[i] - IN.worldPos.xyz);
                 attenuation = 1.0 / pow(distance, 2);
                 attenuation *= (10000);
                 if(useShadows[i] == 1.0){
@@ -138,8 +138,10 @@ void main(void) {
                     if(shadowZ < biasCoord.z) {
                         shadow = 0.0;
                     }
+                } else {
+                    shadow = 0.0;
                 }
-            }
+            } 
 
 
 

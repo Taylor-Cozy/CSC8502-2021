@@ -68,10 +68,13 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	shadowShader = new Shader("shadowVert.glsl", "shadowFrag.glsl");
 	processShader = new Shader("ProcessVertex.glsl", "BlurFrag.glsl");
 	mapProcessShader = new Shader("ProcessVertex.glsl", "NoProcessFrag.glsl");
-	if (!lightShader->LoadSuccess()		|| !defaultShader->LoadSuccess()	||
-		!reflectShader->LoadSuccess()	|| !skyboxShader->LoadSuccess()		||
-		!shadowShader->LoadSuccess()	|| !processShader->LoadSuccess()	||
-		!mapProcessShader->LoadSuccess())
+	bloomShader = new Shader("ProcessVertex.glsl", "BloomFrag.glsl");
+	combineBloomShader = new Shader("ProcessVertex.glsl", "CombineBloomFrag.glsl");
+	if (!lightShader->LoadSuccess()			|| !defaultShader->LoadSuccess()	||
+		!reflectShader->LoadSuccess()		|| !skyboxShader->LoadSuccess()		||
+		!shadowShader->LoadSuccess()		|| !processShader->LoadSuccess()	||
+		!mapProcessShader->LoadSuccess()	|| !bloomShader->LoadSuccess()		||
+		!combineBloomShader->LoadSuccess())
 		return;
 #pragma endregion
 
@@ -260,14 +263,38 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	}
 
+	// Create colour texture
+	for (int i = 0; i < 3; i++) {
+		glGenTextures(1, &bloomColourTex[i]);
+		glBindTexture(GL_TEXTURE_2D, bloomColourTex[i]);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	}
+
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &mapFBO);
 	glGenFramebuffers(1, &processFBO);
+	glGenFramebuffers(1, &bloomFBO);
+
+	GLenum buffers[3] = {
+		GL_COLOR_ATTACHMENT0,
+		GL_COLOR_ATTACHMENT1,
+		GL_COLOR_ATTACHMENT2
+	};
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex[0], 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bloomColourTex[0], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bloomColourTex[1], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, bloomColourTex[2], 0);
+	glDrawBuffers(3, buffers);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, mapFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mapDepthTex, 0);
@@ -302,6 +329,7 @@ Renderer::~Renderer(void)	{
 
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
+
 }
 
 // TODO: Cubemap lighting
@@ -332,6 +360,7 @@ void Renderer::UpdateScene(float dt) {
 
 	root->Update(dt);
 }
+
 // TODO reflect shader
 void Renderer::BuildNodeLists(SceneNode* from) {
 	if (frameFrustum.InsideFrustum(*from)) {
@@ -437,6 +466,7 @@ void Renderer::RenderScene() {
 
 	BuildNodeLists(root);
 	SortNodeLists();
+
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_DEPTH_TEST);
@@ -452,28 +482,39 @@ void Renderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);
-	glClearColor(0, 0, 0, 1.0f);
+	glClearColor(0, 0, 0, 0.0f);
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 	viewMatrix = sceneViewMatrix;
 
 	DrawMainScene();
+	
+	glClearColor(0, 0, 0, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+	viewMatrix = sceneViewMatrix;
 
 	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 	glStencilMask(0x00);
 
 	DrawSkyBox();
-	
+
 	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	glStencilMask(0xFF);
-	
+	DrawBloom();
+	CombineBloom();
+
+	//projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+	//viewMatrix = sceneViewMatrix;
+
 	if (camera->GetPosition().y < 140) {
 		DrawPostProcess(bufferColourTex, processShader, 10);
 	}
 	else {
 		DrawPostProcess(bufferColourTex, mapProcessShader, 1);
 	}
-
+	
 	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_FRAMEBUFFER, mapFBO);
 	glViewport(0, 0, width, height);
@@ -519,6 +560,7 @@ void Renderer::ClearNodeLists() {
 
 void Renderer::DrawShadowScene() {
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	int counter = 0;
@@ -557,6 +599,7 @@ void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader, int 
 	glBindFramebuffer(GL_FRAMEBUFFER, processFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureArray[1], 0);
 	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
+	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	BindShader(processShader);
@@ -583,6 +626,43 @@ void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader, int 
 		glBindTexture(GL_TEXTURE_2D, textureArray[1]);
 		quad->Draw();
 	}
+
+	
+}
+
+void Renderer::DrawBloom()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+	BindShader(bloomShader);
+	projMatrix.ToIdentity();
+	viewMatrix.ToIdentity();
+	modelMatrix.ToIdentity();
+	UpdateShaderMatrices();
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glUniform1i(glGetUniformLocation(bloomShader->GetProgram(), "sceneTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, bufferColourTex[0]);
+	quad->Draw();
+
+	DrawPostProcess(bloomColourTex, processShader, 10);
+}
+
+void Renderer::CombineBloom()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+	BindShader(combineBloomShader);
+	projMatrix.ToIdentity();
+	viewMatrix.ToIdentity();
+	modelMatrix.ToIdentity();
+	UpdateShaderMatrices();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, bloomColourTex[2]);
+	glUniform1i(glGetUniformLocation(combineBloomShader->GetProgram(), "sceneTex"), 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bloomColourTex[0]);
+	glUniform1i(glGetUniformLocation(combineBloomShader->GetProgram(), "bloomBlur"), 1);
+	quad->Draw();
 }
 
 void Renderer::PresentScene() {

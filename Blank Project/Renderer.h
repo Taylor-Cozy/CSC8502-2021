@@ -44,6 +44,8 @@ protected:
 
 	void PresentScene();
 	void DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses = 1);
+	void DrawBloom();
+	void CombineBloom();
 
 	SceneNode* root;
 
@@ -68,6 +70,8 @@ protected:
 	Shader* processShader;
 	Shader* mapProcessShader;
 	Shader* mapSceneShader;
+	Shader* bloomShader;
+	Shader* combineBloomShader;
 
 	GLuint cubeMap;
 	GLuint earthTexture;
@@ -85,10 +89,13 @@ protected:
 	GLuint bufferFBO;
 	GLuint mapFBO;
 	GLuint processFBO;
-
+	GLuint bloomFBO;
+	
+	GLuint bloomColourTex[3];
 	GLuint bufferColourTex[2];
 	GLuint mapColourTex[2];
 	GLuint bufferDepthTex;
+	GLuint bloomDepthTex;
 	GLuint mapDepthTex;
 
 	GLuint shadowCubeFBO;
