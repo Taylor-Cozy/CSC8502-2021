@@ -488,8 +488,7 @@ void Renderer::RenderScene() {
 	viewMatrix = sceneViewMatrix;
 
 	DrawMainScene();
-	
-	glClearColor(0, 0, 0, 0);
+	DrawBloom();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
@@ -502,7 +501,6 @@ void Renderer::RenderScene() {
 
 	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	glStencilMask(0xFF);
-	DrawBloom();
 	CombineBloom();
 
 	//projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
@@ -535,9 +533,10 @@ void Renderer::RenderScene() {
 	//glDisable(GL_DEPTH_TEST);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//DrawDebugNodes();
-
+	//
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	//glEnable(GL_DEPTH_TEST);
+
 	ClearNodeLists();
 }
 
@@ -657,6 +656,7 @@ void Renderer::CombineBloom()
 	modelMatrix.ToIdentity();
 	UpdateShaderMatrices();
 	glActiveTexture(GL_TEXTURE0);
+	bloomColourTex[2] = bufferColourTex[0];
 	glBindTexture(GL_TEXTURE_2D, bloomColourTex[2]);
 	glUniform1i(glGetUniformLocation(combineBloomShader->GetProgram(), "sceneTex"), 0);
 	glActiveTexture(GL_TEXTURE1);
