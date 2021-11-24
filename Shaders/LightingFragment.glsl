@@ -134,7 +134,7 @@ void main(void) {
                 
                 if(abs(shadowNDC.x) < 1.0 && abs(shadowNDC.y) < 1.0 && abs(shadowNDC.z) < 1.0) {
                     vec3 biasCoord = (shadowNDC) * 0.5 + 0.5;
-                    float shadowZ = texture(shadowTex, vec2((biasCoord.x / 2.0) + shadowTexOffsets[i].x, (biasCoord.y / 2.0) + shadowTexOffsets[i].y)).x;
+                    float shadowZ = texture(shadowTex, vec2((biasCoord.x / 4.0) + shadowTexOffsets[i].x, (biasCoord.y / 4.0) + shadowTexOffsets[i].y)).x;
                     if(shadowZ < biasCoord.z) {
                         shadow = 0.0;
                     }

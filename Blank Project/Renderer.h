@@ -10,6 +10,8 @@ class Mesh;
 class Shader;
 class HeightMap;
 class Light;
+class MeshAnimation;
+class MeshMaterial;
 
 class Renderer : public OGLRenderer	{
 public:
@@ -18,6 +20,16 @@ public:
 
 	void RenderScene()				override;
 	void UpdateScene(float msec)	override;
+	void ToggleTrack(bool toggle) {
+		if (toggle) {
+			followTrack = false;
+		}
+		else {
+			curTime = 0.0f;
+			followTrack = true;
+			currentWaypoint = 0;
+		}
+	}
 
 protected:
 	void BuildNodeLists(SceneNode* from);
@@ -47,6 +59,8 @@ protected:
 	void DrawBloom();
 	void CombineBloom();
 
+	void DrawSoldier();
+
 	SceneNode* root;
 
 	Camera* camera;
@@ -59,6 +73,12 @@ protected:
 	Mesh* sphere;
 	Mesh* quad;
 	Mesh* circle;
+	Mesh* soldier;
+	MeshAnimation* soldierAnim;
+	MeshMaterial* soldierMaterial;
+	vector<GLuint> soldierTextures;
+	int currentFrame;
+	float frameTime;
 
 	Shader* lightShader;
 	Shader* defaultShader;
@@ -72,6 +92,7 @@ protected:
 	Shader* mapSceneShader;
 	Shader* bloomShader;
 	Shader* combineBloomShader;
+	Shader* skinningShader;
 
 	GLuint cubeMap;
 	GLuint earthTexture;
@@ -114,4 +135,25 @@ protected:
 	Matrix4 mapViewMatrix;
 	Matrix4 mapProjMatrix;
 	Matrix4 sceneViewMatrix;
+
+	vector<Vector3> waypoints;
+	vector<Vector2> waypointRot;
+	vector<float> waypointTimes;
+	Vector3 oldPos;
+	Vector2 oldRot;
+	int currentWaypoint = 0;
+	float distance(Vector3 a, Vector3 b) {
+		return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+	}
+	Vector3 lerp(Vector3 a, Vector3 b, float t) {
+		return (a * t) + (b * (1.0f - t));
+	}
+	float lerp(float a, float b, float t) {
+		return (a * t) + (b * (1.0f - t));
+	}
+	bool followTrack = true;
+	float waypointTime = 5.0f;
+	float curTime = 0.0f;
+	bool wait = false;
+	float curWaitTime = 0.0f;
 };

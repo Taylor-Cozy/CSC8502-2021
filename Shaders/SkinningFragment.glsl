@@ -10,9 +10,9 @@ in Vertex {
 out vec4 fragColour;
 
 void main(void) {
-    fragColour = texture(diffuseTex, IN.texCoord) * IN.jointWeights;
+    fragColour = texture(diffuseTex, IN.texCoord);
 
-    if(IN.jointWeights.yz == vec2(0,0)){
-        discard;
-    }
+    // if(IN.jointWeights.yz == vec2(0,0)){
+    //     discard;
+    // }
 }

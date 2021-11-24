@@ -26,6 +26,13 @@ int main()	{
 		if (Window::GetKeyboard()->KeyDown(KEYBOARD_F5)) {
 			Shader::ReloadAllShaders();
 		}
+
+		if (Window::GetKeyboard()->KeyDown(KEYBOARD_2)) {
+			renderer.ToggleTrack(false);
+		}
+		if (Window::GetKeyboard()->KeyDown(KEYBOARD_1)) {
+			renderer.ToggleTrack(true);
+		}
 		w.SetTitle("Make your own project! " + std::to_string(1.0f/ w.GetTimer()->GetTimeDeltaSeconds()));
 	}
 	return 0;
