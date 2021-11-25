@@ -13,9 +13,9 @@ class Light;
 class MeshAnimation;
 class MeshMaterial;
 
-class Renderer : public OGLRenderer	{
+class Renderer : public OGLRenderer {
 public:
-	Renderer(Window &parent);
+	Renderer(Window& parent);
 	~Renderer(void);
 
 	void RenderScene()				override;
@@ -32,9 +32,12 @@ public:
 	}
 
 	void ActivatePortal() {
-		if(sunTime == 0.0f || sunTime == 1.0f)
+		if (sunTime == 0.0f || sunTime == 1.0f)
 			changeSkybox = !changeSkybox;
 	};
+	void ToggleDebug() {
+		debug = !debug;
+	}
 
 protected:
 	void BuildNodeLists(SceneNode* from);
@@ -49,15 +52,7 @@ protected:
 
 	void DrawSkyBox();
 
-	void FillBuffers();
-	void DrawPointLights();
-	void CombineBuffers();
-
-	void GenerateScreenTexture(GLuint& into, bool depth = false);
-
 	void DrawShadowScene();
-	void DrawPointShadowScene();
-	void DrawMainScene();
 
 	void PresentScene();
 	void DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses = 1, Vector4 colour = Vector4(1, 1, 1, 1));
@@ -68,7 +63,18 @@ protected:
 	void DrawMirror();
 	void DrawSun();
 
+	float distance(Vector3 a, Vector3 b) {
+		return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+	}
+	Vector3 lerp(Vector3 a, Vector3 b, float t) {
+		return (a * t) + (b * (1.0f - t));
+	}
+	float lerp(float a, float b, float t) {
+		return (a * t) + (b * (1.0f - t));
+	}
+
 	SceneNode* root;
+	SceneNode* spin;
 
 	Camera* camera;
 	Camera* mapView;
@@ -76,7 +82,6 @@ protected:
 	float time = 0.0f;
 	HeightMap* heightmap;
 	Mesh* debugCube;
-	Mesh* cube;
 	Mesh* sphere;
 	Mesh* quad;
 	Mesh* circle;
@@ -85,6 +90,7 @@ protected:
 	MeshAnimation* soldierAnim;
 	MeshMaterial* soldierMaterial;
 	vector<GLuint> soldierTextures;
+	vector<GLuint> treeTextures;
 	int currentFrame;
 	float frameTime;
 
@@ -92,17 +98,15 @@ protected:
 	Shader* defaultShader;
 	Shader* reflectShader;
 	Shader* skyboxShader;
-	Shader* sceneShader;
-	Shader* combineShader;
 	Shader* shadowShader;
 	Shader* processShader;
 	Shader* mapProcessShader;
-	Shader* mapSceneShader;
 	Shader* bloomShader;
 	Shader* combineBloomShader;
 	Shader* skinningShader;
 	Shader* mirrorShader;
 
+	GLuint test;
 	GLuint cubeMap;
 	GLuint cubeMapMountains;
 	GLuint earthTexture;
@@ -114,25 +118,24 @@ protected:
 	GLuint heightmapTex;
 	GLuint rockTexture;
 	GLuint rockBump;
+	GLuint palmTreeTex;
+	GLuint palmTreeNormal;
 	GLuint* currentCubeMap;
 	GLuint* altCubeMap;
 
 	GLuint shadowFBO;
-	GLuint shadowTex;
 	GLuint bufferFBO;
 	GLuint mapFBO;
 	GLuint processFBO;
 	GLuint bloomFBO;
-	
-	GLuint bloomColourTex[3];
-	GLuint bufferColourTex[2];
-	GLuint mapColourTex[2];
-	GLuint bufferDepthTex;
-	GLuint bloomDepthTex;
-	GLuint mapDepthTex;
 
-	GLuint shadowCubeFBO;
-	GLuint shadowCubeTex;
+	GLuint shadowTex;
+	GLuint bufferColourTex[2];
+	GLuint bufferDepthTex;
+	GLuint mapColourTex[2];
+	GLuint mapDepthTex;
+	GLuint bloomColourTex[3];
+	GLuint bloomDepthTex;
 
 	Frustum frameFrustum;
 
@@ -154,15 +157,6 @@ protected:
 	Vector3 oldPos;
 	Vector2 oldRot;
 	int currentWaypoint = 0;
-	float distance(Vector3 a, Vector3 b) {
-		return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
-	}
-	Vector3 lerp(Vector3 a, Vector3 b, float t) {
-		return (a * t) + (b * (1.0f - t));
-	}
-	float lerp(float a, float b, float t) {
-		return (a * t) + (b * (1.0f - t));
-	}
 	bool followTrack = true;
 	float waypointTime = 5.0f;
 	float curTime = 0.0f;
@@ -172,4 +166,6 @@ protected:
 	float sunTime = 1.0f;
 	bool changeSkybox = false;
 	Vector3 dirLight = Vector3(10.0f, 75.0f, 0.0f);
+
+	bool debug = false;
 };

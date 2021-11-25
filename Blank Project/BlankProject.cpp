@@ -16,9 +16,6 @@ int main()	{
 	w.LockMouseToWindow(true);
 	w.ShowOSPointer(false);
 
-	//float timeWait = 5.0f;
-	//float curTime = 5.0f;
-
 	while(w.UpdateWindow()  && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)){
 		renderer.UpdateScene(w.GetTimer()->GetTimeDeltaSeconds());
 		renderer.RenderScene();
@@ -37,6 +34,11 @@ int main()	{
 		if (Window::GetKeyboard()->KeyDown(KEYBOARD_F)) {
 			renderer.ActivatePortal();
 		}
+
+		if (Window::GetKeyboard()->KeyDown(KEYBOARD_X)) {
+			renderer.ToggleDebug();
+		}
+
 
 		w.SetTitle("Make your own project! " + std::to_string(1.0f/ w.GetTimer()->GetTimeDeltaSeconds()));
 	}

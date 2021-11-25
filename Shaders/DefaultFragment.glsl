@@ -16,4 +16,9 @@ void main(void){
     if(useTexture == 1){
         fragColour = texture(diffuseTex, IN.texCoord);
     }
+
+    if(fragColour.a < 0.6){
+        //fragColour = vec4(1,0,0,1);
+        discard;
+    }
 }

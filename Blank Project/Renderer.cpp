@@ -11,7 +11,8 @@
 #define SHADOWSIZE 4096
 
 Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
-	
+
+#pragma region Import Meshes
 	quad = Mesh::GenerateQuad();
 	circle = Mesh::GenerateCircle();
 	debugCube = Mesh::LoadFromMeshFile("cube.msh");
@@ -20,7 +21,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	soldier = Mesh::LoadFromMeshFile("Role_T.msh");
 	soldierAnim = new MeshAnimation("Role_T.anm");
 	soldierMaterial = new MeshMaterial("Role_T.mat");
-	tree = Mesh::LoadFromMeshFile("palmtree.msh");
+	tree = Mesh::LoadFromMeshFile("palm_tree.msh");
 
 	for (int i = 0; i < soldier->GetSubMeshCount(); i++) {
 		const MeshMaterialEntry* matEntry = soldierMaterial->GetMaterialForLayer(i);
@@ -31,6 +32,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 		GLuint texID = SOIL_load_OGL_texture(path.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
 		soldierTextures.emplace_back(texID);
 	}
+#pragma endregion
 
 	currentFrame = 0;
 	frameTime = 0.0f;
@@ -45,6 +47,8 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	rockTexture = SOIL_load_OGL_texture(TEXTUREDIR"rock.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	rockBump = SOIL_load_OGL_texture(TEXTUREDIR"rockBump.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	heightmapTex = SOIL_load_OGL_texture(TEXTUREDIR"noise1.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	palmTreeTex = SOIL_load_OGL_texture(TEXTUREDIR"diffus.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	palmTreeNormal = SOIL_load_OGL_texture(TEXTUREDIR"diffus.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	cubeMap = SOIL_load_OGL_cubemap(
 		TEXTUREDIR"Daylight Box_Right.bmp", TEXTUREDIR"Daylight Box_Left.bmp",
 		TEXTUREDIR"Daylight Box_Top.bmp", TEXTUREDIR"Daylight Box_Bottom.bmp",
@@ -59,11 +63,8 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 
 	currentCubeMap = &cubeMap;
 
-	if (!waterTexture	|| !waterBump		|| 
-		!earthTexture	|| !earthBump		|| 
-		!cubeMap		|| !heightmapTex	|| 
-		!sandTexture	|| !sandBump		|| 
-		!rockTexture	|| !rockBump		||
+	if (!waterTexture	|| !waterBump		|| !earthTexture	|| !earthBump		|| !cubeMap		|| !heightmapTex	||
+		!sandTexture	|| !sandBump		|| !rockTexture		|| !rockBump		|| !palmTreeTex	|| !palmTreeNormal	|| 
 		!cubeMapMountains)
 		return;
 
@@ -101,7 +102,6 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 #pragma endregion
 
 	Vector3 heightmapSize = heightmap->GetHeightMapSize();
-
 	root = new SceneNode();
 
 #pragma region HeightMap Node
@@ -141,31 +141,26 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 #pragma endregion
 
 #pragma region Create Shadow Lights / Meshes
-	lights.emplace_back(new Light(dirLight, Vector4(1, 1, 1, 1), DIRECTIONAL_LIGHT));
+	lights.emplace_back(new Light(dirLight, Vector4(1, 1, 1, 1), DIRECTIONAL_LIGHT)); // Create directional light for sun
 
-	Vector3 lightLocation = Vector3(heightmapSize.x * 0.5 + 50.0f, 50.0f, heightmapSize.z * 0.5 + 50.0f);
-	lightLocation = Vector3(lightLocation.x, heightmap->GetHeightAtLocation(lightLocation) + 100.0f, lightLocation.z);
+	// Create two lights for showcasing multiple shadowmaps
+	Vector3 lightLocation = Vector3(heightmapSize.x * 0.5 + 50.0f, 50.0f, heightmapSize.z * 0.6 + 50.0f);
+	lightLocation = Vector3(lightLocation.x, heightmap->GetHeightAtLocation(lightLocation) + 50.0f, lightLocation.z);
 
 	Vector3 lightLocation2 = Vector3(heightmapSize.x * 0.7 - 50.0f, 50.0f, heightmapSize.z * 0.4 - 50.0f);
 	lightLocation2 = Vector3(lightLocation2.x, heightmap->GetHeightAtLocation(lightLocation2) + 100.0f, lightLocation2.z);
-	pointLight = new Light(lightLocation2, Vector4(0, 0, 1, 1), POINT_LIGHT, 100000.0f, true);
-	pointLight2 = new Light(lightLocation, Vector4(1, 0, 0, 1), POINT_LIGHT, 100000.0f, true);
-	lights.emplace_back(pointLight);
-	lights.emplace_back(pointLight2);
+	lights.emplace_back(new Light(lightLocation2, Vector4(0, 0, 1, 1), POINT_LIGHT, 100000.0f, true));
+	lights.emplace_back(new Light(lightLocation, Vector4(1, 0, 0, 1), POINT_LIGHT, 100000.0f, true));
 
-	SceneNode* testShadow = new SceneNode(sphere);
-	testShadow->SetTransform(Matrix4::Translation(lightLocation) * Matrix4::Translation(Vector3(-70, -25, -70)) * Matrix4::Scale(Vector3(10, 10, 10)));
+	// Create test object for shadowmap
+	SceneNode* testShadow = new SceneNode(debugCube);
+	spin = testShadow;
+	testShadow->SetTransform(Matrix4::Translation(lightLocation2) * Matrix4::Translation(Vector3(-100, -40, -30)));
+	testShadow->SetModelScale(Vector3(15, 15, 15));
 	testShadow->SetShader(lightShader);
-	BoundingBox* shadowBound = new BoundingBox(Vector3(10, 10, 10), testShadow->GetWorldTransform());
+	BoundingBox* shadowBound = new BoundingBox(Vector3(15, 15, 15), testShadow->GetWorldTransform());
 	testShadow->SetBoundingVolume(shadowBound);
 	heightMapNode->AddChild(testShadow);
-
-	SceneNode* testShadow2 = new SceneNode(debugCube);
-	testShadow2->SetTransform(Matrix4::Translation(lightLocation2) * Matrix4::Translation(Vector3(-70, -25, -70)) * Matrix4::Scale(Vector3(15, 15, 15)));
-	testShadow2->SetShader(lightShader);
-	BoundingBox* shadowBound2 = new BoundingBox(Vector3(15, 15, 15), testShadow2->GetWorldTransform());
-	testShadow2->SetBoundingVolume(shadowBound2);
-	heightMapNode->AddChild(testShadow2);
 
 #pragma endregion
 
@@ -188,9 +183,9 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 			}
 		}
 		lightNode->SetTransform(
-			Matrix4::Translation(location) *
-			Matrix4::Scale(Vector3(10, 10, 10))
+			Matrix4::Translation(location)
 		);
+		lightNode->SetModelScale(Vector3(10, 10, 10));
 
 		BoundingSphere* b = new BoundingSphere(10.0f, lightNode->GetWorldTransform());
 		lightNode->SetBoundingVolume(b);
@@ -203,10 +198,36 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	}
 #pragma endregion
 
-	SceneNode* treeNode = new SceneNode(tree);
-	treeNode->SetTransform(Matrix4::Translation(Vector3(0, 0, 0)) * Matrix4::Scale(Vector3(2.0, 2.0, 2.0)));
-	treeNode->SetShader(defaultShader);
-	heightMapNode->AddChild(treeNode);
+#pragma region Trees
+	for (int i = 0; i < 20; i++) {
+		SceneNode* treeNode = new SceneNode(tree);
+		Vector3 location;
+		while (true) {
+			location = Vector3(rand() % (int)heightmapSize.x,
+				350.0f,
+				rand() % (int)heightmapSize.z);
+
+			float height = heightmap->GetHeightAtLocation(location);
+
+			if (height > 150.0f && height < 200.0f) {
+				location.y = height - (rand() % 80);
+				break;
+			}
+		}
+		treeNode->SetTransform(
+			Matrix4::Translation(location)
+		);
+		treeNode->SetModelScale(Vector3(100, 100, 100));
+		BoundingBox* b = new BoundingBox(Vector3(100,220,100), treeNode->GetWorldTransform());
+		b->SetOffset(Vector3(0, 220, 0));
+		treeNode->SetBoundingVolume(b);
+		treeNode->SetColour(Vector4(0, 0, 0, 0));
+		treeNode->SetTexture(&palmTreeTex);
+		treeNode->SetBumpMapTexture(&palmTreeNormal);
+		treeNode->SetShader(defaultShader);
+		heightMapNode->AddChild(treeNode);
+	}
+#pragma endregion
 
 #pragma region Create Shadow FBO
 	glGenTextures(1, &shadowTex);
@@ -224,29 +245,6 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowTex, 0);
 	glDrawBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// ------------------------------------
-
-	//glGenTextures(1, &shadowCubeTex);
-	//glBindTexture(GL_TEXTURE_CUBE_MAP, shadowCubeTex);
-	//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//for (int i = 0; i < 6; i++) {
-	//	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOWSIZE, SHADOWSIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	//}
-
-	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-	//glGenFramebuffers(1, &shadowCubeFBO);
-	//glBindFramebuffer(GL_FRAMEBUFFER, shadowCubeFBO);
-	//glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowCubeTex, 0);
-	//glDrawBuffer(GL_NONE);
-	//glReadBuffer(GL_NONE);
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 #pragma endregion
 
@@ -335,43 +333,40 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	}
 #pragma endregion
 
-	//SceneNode* mirror = new SceneNode(circle);
-	//mirror->SetShader(mirrorShader);
-	//mirror->SetTexture(&cubeMapMountains);
-	//mirror->SetTransform(heightMapNode->GetTransform() * Matrix4::Translation(Vector3(0, 300, 0)));
-	////mirror->Set
+	camera = new Camera(-30.0f, -130.0f, 0.0f, heightmapSize * Vector3(0.05f, 3.0f, 0.05f));
+	mapView = new Camera(-90, -130.0f, 0, heightmapSize * Vector3(0.05f, 5.0f, 0.05f), true);
 
-	camera = new Camera(-45.0f, 0.0f, 0.0f, heightmapSize * Vector3(0.05f, 3.0f, 0.05f));
-	mapView = new Camera(-90, 0.0f, 0, heightmapSize * Vector3(0.05f, 5.0f, 0.05f), true);
-
-	//projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+#pragma region Waypoints
 	waypoints.emplace_back(heightmapSize * Vector3(0.05f, 3.0f, 0.05f));	// Entire Island
 	waypoints.emplace_back(heightmapSize * Vector3(0.05f, 0.1f, 0.2f));		// Ocean
 	waypoints.emplace_back(heightmapSize * Vector3(0.2f, 0.1f, 0.9f));		// Ocean
-	waypoints.emplace_back(heightmapSize* Vector3(0.5f, 0.7f, 0.55f));		// Beach Soldier + Real Time Shadow
+	waypoints.emplace_back(heightmapSize* Vector3(0.5f, 0.4f, 0.62f));		// Beach Soldier + Real Time Shadow
 	waypoints.emplace_back(heightmapSize* Vector3(0.58f, 0.9f, 0.4f));		// Other real time shadow
 	waypoints.emplace_back(heightmapSize* Vector3(0.61f, 0.5f, 0.42f));		// Bloom
 	waypoints.emplace_back(heightmapSize* Vector3(0.35f, 0.8f, 0.27f));		// Portal
 	waypoints.emplace_back(heightmapSize* Vector3(0.25f, 0.8f, 0.22f));		// Portal
-	waypointRot.emplace_back(Vector2(-30.0f, -130));
-	waypointRot.emplace_back(Vector2(-0.0f, -170));
-	waypointRot.emplace_back(Vector2(-0.0f, -50));
-	waypointRot.emplace_back(Vector2(-20.0f, 10));
-	waypointRot.emplace_back(Vector2(-20.0f, -80));
-	waypointRot.emplace_back(Vector2(-20.0f, -180));
-	waypointRot.emplace_back(Vector2(-5.0f, -220));
-	waypointRot.emplace_back(Vector2(-5.0f, -150));
-	waypointTimes.emplace_back(5.0f);
-	waypointTimes.emplace_back(0.0f);
-	waypointTimes.emplace_back(0.0f);
-	waypointTimes.emplace_back(5.0f);
-	waypointTimes.emplace_back(3.0f);
-	waypointTimes.emplace_back(3.0f);
-	waypointTimes.emplace_back(0.1f);
-	waypointTimes.emplace_back(3.0f);
+
+	waypointRot.emplace_back(Vector2(-30.0f, -130));			// Entire Island
+	waypointRot.emplace_back(Vector2(-0.0f, -170));				// Ocean
+	waypointRot.emplace_back(Vector2(-0.0f, -50));				// Ocean
+	waypointRot.emplace_back(Vector2(-20.0f, 10));				// Beach Soldier + Real Time Shadow
+	waypointRot.emplace_back(Vector2(-20.0f, -80));				// Other real time shadow
+	waypointRot.emplace_back(Vector2(-20.0f, -180));			// Bloom
+	waypointRot.emplace_back(Vector2(-5.0f, -220));				// Portal
+	waypointRot.emplace_back(Vector2(-5.0f, -150));				// Portal
+
+	waypointTimes.emplace_back(3.0f);			// Entire Island
+	waypointTimes.emplace_back(1.0f);			// Ocean
+	waypointTimes.emplace_back(1.0f);			// Ocean
+	waypointTimes.emplace_back(5.0f);			// Beach Soldier + Real Time Shadow
+	waypointTimes.emplace_back(3.0f);			// Other real time shadow
+	waypointTimes.emplace_back(3.0f);			// Bloom
+	waypointTimes.emplace_back(1.0f);			// Portal
+	waypointTimes.emplace_back(3.0f);			// Portal
 
 	oldPos = camera->GetPosition();
-	oldRot = Vector2(-45.0f, 0);
+	oldRot = Vector2(-30.0f, -130.0f);
+#pragma endregion
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
@@ -384,19 +379,50 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 Renderer::~Renderer(void)	{
 	delete root;
 	delete camera;
+	delete mapView;
+
 	delete heightmap;
+	delete sphere;
+	delete quad;
+	delete circle;
+	delete tree;
+	delete soldier;
+	delete soldierAnim;
+	delete soldierMaterial;
+
 	delete lightShader;
 	delete defaultShader;
+	delete reflectShader;
+	delete skyboxShader;
+	delete shadowShader;
+	delete processShader;
+	delete mapProcessShader;
+	delete bloomShader;
+	delete combineBloomShader;
+	delete skinningShader;
+	delete mirrorShader;
+
+	glDeleteFramebuffers(1, &shadowFBO);
+	glDeleteFramebuffers(1, &bufferFBO);
+	glDeleteFramebuffers(1, &mapFBO);
+	glDeleteFramebuffers(1, &processFBO);
+	glDeleteFramebuffers(1, &bloomFBO);
 
 	glDeleteTextures(1, &shadowTex);
-	glDeleteFramebuffers(1, &shadowFBO);
-
+	glDeleteTextures(2, bufferColourTex);
+	glDeleteTextures(1, &bufferDepthTex);
+	glDeleteTextures(2, mapColourTex);
+	glDeleteTextures(1, &mapDepthTex);
+	glDeleteTextures(3, bloomColourTex);
+	glDeleteTextures(1, &bloomDepthTex);
 }
 
 void Renderer::UpdateScene(float dt) {
 	camera->UpdateCamera(dt);
 	mapView->UpdateCamera(dt);
+	
 	time += dt;
+	spin->SetTransform(spin->GetTransform() * Matrix4::Translation(Vector3(cos(time)/5.0f, sin(time) / 10.0f, 0)));
 
 	frameTime -= dt;
 	while (frameTime < 0.0f) {
@@ -431,7 +457,6 @@ void Renderer::UpdateScene(float dt) {
 		}
 		else {
 			curWaitTime -= dt;
-			std::cout << curWaitTime << std::endl;
 		}
 
 	}
@@ -443,24 +468,13 @@ void Renderer::UpdateScene(float dt) {
 		else {
 			sunTime -= dt / 3.0f;
 		}
-	}
-	else {
+	} else {
 		if (sunTime >= 1.0f) {
 			sunTime = 1.0f;
 		}
 		else {
 			sunTime += dt / 3.0f;
 		}
-	}
-
-	Vector3 newPos = Vector3(pointLight->GetPosition().x, pointLight->GetPosition().y + (sin(time) / 10.0f), pointLight->GetPosition().z);
-	pointLight->SetPosition(newPos);
-
-	for (auto light : lights) {
-		if (light->GetType() == POINT_LIGHT) {
-			light->SetPosition(light->GetPosition() + Vector3(0, sin(time) / 2.0f, 0));
-		}
-		//transform = transform * Matrix4::Translation(Vector3(0, , 0));
 	}
 
 	mapViewMatrix = mapView->BuildViewMatrix();
@@ -472,24 +486,22 @@ void Renderer::UpdateScene(float dt) {
 	root->Update(dt);
 }
 
-
-// TODO reflect shader
 void Renderer::BuildNodeLists(SceneNode* from) {
 	if (frameFrustum.InsideFrustum(*from)) {
 		Vector3 dir = from->GetWorldTransform().GetPositionVector() - camera->GetPosition();
 		from->SetCameraDistance(Vector3::Dot(dir, dir));
-
-		//if (from->IsLight()) {
-		//	lightNodeList.push_back(from);
-		//}
-		//else {
+		// Used to make the lights move up and down
+		if (from->IsLight()) {
+			lightNodeList.push_back(from);
+		}
+		else {
 			if (from->GetColour().w < 1.0f) {
 				transparentNodeList.push_back(from);
 			}
 			else {
 				nodeList.push_back(from);
 			}
-		//}
+		}
 	}
 
 	for (vector<SceneNode*>::const_iterator i = from->GetChildIteratorStart(); i != from->GetChildIteratorEnd(); ++i) {
@@ -501,8 +513,6 @@ void Renderer::SortNodeLists() {
 	std::sort(transparentNodeList.rbegin(), transparentNodeList.rend(), SceneNode::CompareByCameraDistance);
 	std::sort(nodeList.begin(), nodeList.end(), SceneNode::CompareByCameraDistance);
 	std::sort(lightNodeList.begin(), lightNodeList.end(), SceneNode::CompareByCameraDistance);
-
-	//std::cout << "No. Lights: " << lights.size() << std::endl;
 }
 
 void Renderer::DrawNodes(bool shadowPass) {
@@ -521,13 +531,13 @@ void Renderer::DrawNodes(bool shadowPass) {
 }
 
 void Renderer::DrawDebugNodes() {
+	glDisable(GL_DEPTH_TEST);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	BindShader(defaultShader);
 	glUniform4fv(glGetUniformLocation(defaultShader->GetProgram(), "nodeColour"), 1, (float*)&Vector4(1, 1, 1, 1));
 	glUniform1i(glGetUniformLocation(defaultShader->GetProgram(), "useTexture"), 0);
 	UpdateShaderMatrices();
-
-	//glDisable(GL_DEPTH_TEST);
 
 	for (const auto& i : nodeList) {
 		DrawDebugNode(i);
@@ -540,6 +550,9 @@ void Renderer::DrawDebugNodes() {
 	for (const auto& i : transparentNodeList) {
 		DrawDebugNode(i);
 	}
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void Renderer::DrawNode(SceneNode* n, bool shadowPass) {
@@ -572,11 +585,9 @@ void Renderer::DrawNode(SceneNode* n, bool shadowPass) {
 
 void Renderer::DrawDebugNode(SceneNode* n) {
 	if (n->GetMesh()) {
-		glUniform4fv(glGetUniformLocation(defaultShader->GetProgram(), "nodeColour"), 1, (float*)& Vector4(0.98, 0.28, 0.76, 0.5));
+		glUniform4fv(glGetUniformLocation(defaultShader->GetProgram(), "nodeColour"), 1, (float*)& Vector4(0.98, 0.28, 0.76, 1.0));
 		
 		if (n->GetBoundingVolume()->GetType() == BOX) {
-			//Matrix4 model = n->GetBoundingVolume()->GetWorldPosition() * Matrix4::Scale(Vector3(2, 2, 2)); // Cube is 0.5 units wide therefore scale by 2
-			//glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgram(), "modelMatrix"), 1, false, (model).values);
 			modelMatrix = n->GetBoundingVolume()->GetWorldPosition() * Matrix4::Scale(Vector3(2, 2, 2));
 			UpdateShaderMatrices();
 			debugCube->Draw();
@@ -586,19 +597,14 @@ void Renderer::DrawDebugNode(SceneNode* n) {
 			glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgram(), "modelMatrix"), 1, false, (model).values);
 			sphere->Draw();
 		}
-		//debugSphere->Draw();
 	}
 }
 
-void Renderer::DrawMainScene() {
-	DrawNodes();
-}
-
 void Renderer::RenderScene() {
-
 	BuildNodeLists(root);
 	SortNodeLists();
 
+	glClearColor(0, 0, 0, 0.0f);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_DEPTH_TEST);
@@ -612,44 +618,34 @@ void Renderer::RenderScene() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);
-	glClearColor(0, 0, 0, 0.0f);
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 	viewMatrix = sceneViewMatrix;
 
-	DrawMainScene();
+	DrawNodes(false);
 	DrawSoldier();
 	DrawMirror();
 	DrawSun();
-
-	//glDisable(GL_DEPTH_TEST);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//DrawDebugNodes();
-
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//glEnable(GL_DEPTH_TEST);
-
+	if (debug) {
+		DrawDebugNodes();
+	}
 	DrawBloom();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 	viewMatrix = sceneViewMatrix;
-
+	
 	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 	glStencilMask(0x00);
-
+	
 	DrawSkyBox();
-
+	
 	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	glStencilMask(0xFF);
 	CombineBloom();
 
-	//projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
-	//viewMatrix = sceneViewMatrix;
-
-	if (camera->GetPosition().y < 140) {
+	if (camera->GetPosition().y < 135) {
 		DrawPostProcess(bufferColourTex, processShader, 10, Vector4(0.98, 0.98, 0.999, 1));
 	}
 	else {
@@ -659,13 +655,13 @@ void Renderer::RenderScene() {
 	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_FRAMEBUFFER, mapFBO);
 	glViewport(0, 0, width, height);
-	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.5f, 0.5f);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	projMatrix = Matrix4::Orthographic(1.0f, 10000.0f, height / 2.0f, -height / 2.0f, height / 2.0f, -height / 2.0f);
 	viewMatrix = mapViewMatrix;
 
-	DrawMainScene();
+	DrawNodes(false);
 	DrawPostProcess(mapColourTex, mapProcessShader);
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
@@ -677,6 +673,7 @@ void Renderer::RenderScene() {
 }
 
 void Renderer::DrawSkyBox() {
+
 	glDepthMask(GL_FALSE);
 
 	BindShader(skyboxShader);
@@ -739,7 +736,6 @@ void Renderer::DrawShadowScene() {
 void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses, Vector4 colour) {
 	glBindFramebuffer(GL_FRAMEBUFFER, processFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureArray[1], 0);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
@@ -769,8 +765,6 @@ void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader, int 
 		glBindTexture(GL_TEXTURE_2D, textureArray[1]);
 		quad->Draw();
 	}
-
-	
 }
 
 void Renderer::DrawBloom()
@@ -814,7 +808,7 @@ void Renderer::DrawSoldier()
 	BindShader(skinningShader);
 	glUniform1i(glGetUniformLocation(skinningShader->GetProgram(), "diffuseTex"), 0);
 	Vector3 heightmapSize = heightmap->GetHeightMapSize();
-	Vector3 location = (heightmapSize * Vector3(0.5f, 1.0f, 0.5f)) + Vector3(-150, -25, -80);
+	Vector3 location = Vector3(heightmapSize.x * 0.5, 50.0f, heightmapSize.z * 0.6);
 	location.y = heightmap->GetHeightAtLocation(location);
 	modelMatrix = Matrix4::Translation(location) * Matrix4::Scale(Vector3(30, 30, 30));
 	UpdateShaderMatrices();
@@ -904,5 +898,4 @@ void Renderer::PresentScene() {
 	glUniform1i(glGetUniformLocation(defaultShader->GetProgram(), "useTexture"), 1);
 	
 	circle->Draw();
-
 }

@@ -82,7 +82,7 @@ public:
 	virtual void UpdateVariables(float dt) {
 		time += dt;
 		if (isLight) {
-			transform = transform * Matrix4::Translation(Vector3(0, sin(time) / 100.0f, 0));
+			transform = transform * Matrix4::Translation(Vector3(0, sin(time) / 10.0f, 0));
 			light->SetPosition(transform.GetPositionVector());
 		}
 	};

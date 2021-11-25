@@ -102,6 +102,6 @@ void SceneNode::SetShaderVariables() {
 		}
 	}
 
-	modelMat = GetWorldTransform();
+	modelMat = GetWorldTransform() * Matrix4::Scale(GetModelScale());
 	textureMat.ToZero();
 }
