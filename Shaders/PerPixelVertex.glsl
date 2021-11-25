@@ -13,7 +13,6 @@ out Vertex {
     vec2 texCoord;
     vec3 normal;
     vec3 worldPos;
-    float visibility;
 } OUT;
 
 void main(void) {
@@ -28,8 +27,4 @@ void main(void) {
     OUT.worldPos = worldPos.xyz;
     gl_Position = (projMatrix * viewMatrix) * worldPos;
 
-    // FOG
-    vec4 distanceFromCam = viewMatrix * worldPos;
-    float magDistance = length(distanceFromCam.xyz);
-    OUT.visibility = exp(-pow((magDistance * 0.0007), 1.5));
 }

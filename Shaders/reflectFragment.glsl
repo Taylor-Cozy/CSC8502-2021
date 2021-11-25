@@ -2,10 +2,12 @@
 
 uniform sampler2D diffuseTex;
 uniform samplerCube cubeTex;
+uniform samplerCube mtnTex;
 uniform sampler2D bumpTex;
 uniform sampler2D heightmapTex;
 uniform vec3 cameraPos;
 uniform float time;
+uniform float sunTime;
 
 in Vertex {
     vec4 colour;
@@ -31,7 +33,8 @@ void main(void){
     vec3 viewDir = normalize(cameraPos - IN.worldPos);
 
     vec3 reflectDir = reflect(-viewDir, normalize(bumpNormal));
-    vec4 reflectTex = texture(cubeTex, reflectDir);
+    vec4 reflectTex1 = texture(mtnTex, reflectDir);
+    vec4 reflectTex2 = texture(cubeTex, reflectDir);
 
-    fragColour *= reflectTex + (diffuse * 0.25);
+    fragColour *= mix(reflectTex1, reflectTex2, sunTime) + (diffuse * 0.25);
 }

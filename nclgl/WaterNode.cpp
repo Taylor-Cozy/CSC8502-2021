@@ -1,6 +1,6 @@
 #include "WaterNode.h"
 
-WaterNode::WaterNode(Vector3 hSize, Mesh* m, Vector4 colour) : SceneNode(m, colour, false), hSize(hSize)
+WaterNode::WaterNode(Vector3 hSize, float* sunTime, Mesh* m, Vector4 colour) : SceneNode(m, colour, false), hSize(hSize), sunTime(sunTime)
 {
 }
 
@@ -18,15 +18,20 @@ void WaterNode::SetShaderVariables()
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "bumpTex"), 1);
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "cubeTex"), 2);
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "mtnTex"), 4);
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "heightmapTex"), 3);
-
+	
 	glUniform1f(glGetUniformLocation(shader->GetProgram(), "time"), time);
+	glUniform1f(glGetUniformLocation(shader->GetProgram(), "sunTime"), *sunTime);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, *diffuseTex);
 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, *cubeTex);
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, *mtnTex);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, *diffuseBump);

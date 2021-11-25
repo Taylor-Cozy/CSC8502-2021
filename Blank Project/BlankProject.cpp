@@ -33,6 +33,11 @@ int main()	{
 		if (Window::GetKeyboard()->KeyDown(KEYBOARD_1)) {
 			renderer.ToggleTrack(true);
 		}
+
+		if (Window::GetKeyboard()->KeyDown(KEYBOARD_F)) {
+			renderer.ActivatePortal();
+		}
+
 		w.SetTitle("Make your own project! " + std::to_string(1.0f/ w.GetTimer()->GetTimeDeltaSeconds()));
 	}
 	return 0;

@@ -120,7 +120,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 #pragma endregion
 
 #pragma region Water Node
-	WaterNode* water = new WaterNode(heightmap->GetHeightMapSize(), quad);
+	WaterNode* water = new WaterNode(heightmap->GetHeightMapSize(), &sunTime, quad);
 	water->SetTransform(
 		Matrix4::Translation(heightmapSize * 0.5f) *
 		Matrix4::Scale(heightmapSize * 0.5f) *
@@ -134,13 +134,14 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	water->SetTexture(&waterTexture);
 	water->SetBumpMapTexture(&waterBump);
 	water->SetCubeMapTexture(&cubeMap);
+	water->SetMtnCubeMapTexture(&cubeMapMountains);
 	water->SetHeightMapTexture(&heightmapTex);
 
 	water->SetShader(reflectShader);
 #pragma endregion
 
 #pragma region Create Shadow Lights / Meshes
-	lights.emplace_back(new Light(Vector3(10, 7.5f, 0.0f), Vector4(1, 1, 1, 1), DIRECTIONAL_LIGHT));
+	lights.emplace_back(new Light(dirLight, Vector4(1, 1, 1, 1), DIRECTIONAL_LIGHT));
 
 	Vector3 lightLocation = Vector3(heightmapSize.x * 0.5 + 50.0f, 50.0f, heightmapSize.z * 0.5 + 50.0f);
 	lightLocation = Vector3(lightLocation.x, heightmap->GetHeightAtLocation(lightLocation) + 100.0f, lightLocation.z);
@@ -417,7 +418,7 @@ void Renderer::UpdateScene(float dt) {
 			mapView->SetPosition(Vector3(newcamPos.x, mapView->GetPosition().y, newcamPos.z));
 			mapView->SetYaw(newYaw);
 
-			if (distance(camera->GetPosition(), waypoints[currentWaypoint]) < 1.0f) {
+			if (distance(camera->GetPosition(), waypoints[currentWaypoint]) < 10.0f) {
 				curWaitTime = waypointTimes[currentWaypoint];
 				oldPos = waypoints[currentWaypoint];
 				oldRot = waypointRot[currentWaypoint];
@@ -435,6 +436,22 @@ void Renderer::UpdateScene(float dt) {
 
 	}
 
+	if (changeSkybox) {
+		if (sunTime <= 0.0f) {
+			sunTime = 0.0f;
+		}
+		else {
+			sunTime -= dt / 3.0f;
+		}
+	}
+	else {
+		if (sunTime >= 1.0f) {
+			sunTime = 1.0f;
+		}
+		else {
+			sunTime += dt / 3.0f;
+		}
+	}
 
 	Vector3 newPos = Vector3(pointLight->GetPosition().x, pointLight->GetPosition().y + (sin(time) / 10.0f), pointLight->GetPosition().z);
 	pointLight->SetPosition(newPos);
@@ -454,6 +471,7 @@ void Renderer::UpdateScene(float dt) {
 
 	root->Update(dt);
 }
+
 
 // TODO reflect shader
 void Renderer::BuildNodeLists(SceneNode* from) {
@@ -665,6 +683,12 @@ void Renderer::DrawSkyBox() {
 	glUniform1i(glGetUniformLocation(skyboxShader->GetProgram(), "cubeTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+
+	glUniform1i(glGetUniformLocation(skyboxShader->GetProgram(), "mtnTex"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapMountains);
+
+	glUniform1f(glGetUniformLocation(skyboxShader->GetProgram(), "sunTime"), sunTime);
 	UpdateShaderMatrices();
 
 	quad->Draw();
@@ -822,6 +846,12 @@ void Renderer::DrawMirror() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapMountains);
 
+	glUniform1i(glGetUniformLocation(mirrorShader->GetProgram(), "skyTex"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+
+	glUniform1f(glGetUniformLocation(mirrorShader->GetProgram(), "sunTime"), sunTime);
+
 	Vector3 location = heightmap->GetHeightMapSize() * Vector3(0.3f, 2.0f, 0.3f);
 	location.y = heightmap->GetHeightAtLocation(location) + 100.0f;
 
@@ -835,7 +865,12 @@ void Renderer::DrawMirror() {
 void Renderer::DrawSun()
 {
 	BindShader(defaultShader);
-	modelMatrix = Matrix4::Translation(camera->GetPosition() + Vector3(2500.0f, 1875.0f, 0.0f)) * Matrix4::Rotation(90, Vector3(0, 1, 0)) * Matrix4::Scale(Vector3(100, 100, 1));
+	float loc = lerp(2500.0f, -2500.0f, sunTime);
+	float rot = lerp(-45, -135, sunTime);
+	float dirX = lerp(100.0f, -100.0f, sunTime);
+	modelMatrix = Matrix4::Translation(camera->GetPosition() + Vector3(loc, 1875.0f, 0.0f)) * Matrix4::Rotation(90, Vector3(0, 1, 0)) * Matrix4::Rotation(rot, Vector3(1,0,0)) * Matrix4::Scale(Vector3(100, 100, 1));
+	dirLight = Vector3(dirX, 75.0f, 0.0f);
+	lights[0]->SetPosition(dirLight);
 	glUniform4fv(glGetUniformLocation(defaultShader->GetProgram(), "nodeColour"), 1, (float*)&Vector4(1,1,1,1));
 	glUniform1i(glGetUniformLocation(defaultShader->GetProgram(), "useTexture"), 0);
 	UpdateShaderMatrices();

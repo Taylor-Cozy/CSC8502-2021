@@ -1,3 +1,11 @@
+CubeMap
 https://opengameart.org/content/sky-box-sunny-day
 
+Sand Texture
 https://ambientcg.com/view?id=Ground033
+
+Grass Texture
+https://ambientcg.com/view?id=Grass004
+
+Rock Texture
+https://ambientcg.com/view?id=Rock046S

@@ -16,7 +16,6 @@ in Vertex {
     vec2 texCoord;
     vec3 normal;
     vec3 worldPos;
-    float visibility;
 } IN;
 
 vec4 sky = vec4(0.2,0.2,0.2,1.0);
@@ -65,23 +64,5 @@ void main(void) {
     }
 
     fragColour += ambientLight * .1;
-    
-    // FOG
-    
-    // if(IN.worldPos.y < 100){
-    //     fragColour *= vec4(.76,.69,0.5,1);
-    // } else if(IN.worldPos.y < 120){
-    //     fragColour *= mix(vec4(0,.5,0,1), vec4(.76,.69,0.5,1), (120 - IN.worldPos.y) / 20.0);
-    // }
-    // else{
-    //     fragColour *= vec4(0,.5,0,1);
-    // }
 
-    // if(IN.normal.y < 0.75){
-    //     fragColour *= vec4(0.58,.29,0,1);
-    // } else {
-    //     fragColour *= vec4(0.27, 0.29, 0.1, 1);
-    // }
-
-    //fragColour = mix(sky, fragColour, IN.visibility);
 }

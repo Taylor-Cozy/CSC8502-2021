@@ -31,6 +31,11 @@ public:
 		}
 	}
 
+	void ActivatePortal() {
+		if(sunTime == 0.0f || sunTime == 1.0f)
+			changeSkybox = !changeSkybox;
+	};
+
 protected:
 	void BuildNodeLists(SceneNode* from);
 	void SortNodeLists();
@@ -163,4 +168,8 @@ protected:
 	float curTime = 0.0f;
 	bool wait = false;
 	float curWaitTime = 0.0f;
+
+	float sunTime = 1.0f;
+	bool changeSkybox = false;
+	Vector3 dirLight = Vector3(10.0f, 75.0f, 0.0f);
 };

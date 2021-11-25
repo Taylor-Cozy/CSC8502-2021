@@ -31,7 +31,6 @@ in Vertex {
     vec3 tangent;
     vec3 binormal;
     vec4 worldPos;
-    float visibility;
 } IN;
 
 vec4 sky = vec4(0.2,0.2,0.2,1.0);
@@ -155,6 +154,4 @@ void main(void) {
         
     }
     fragColour += ambientLight * 0.1;
-    // FOG
-    // fragColour = mix(sky, fragColour, IN.visibility);
 }

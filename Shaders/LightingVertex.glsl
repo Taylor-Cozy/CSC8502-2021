@@ -16,7 +16,6 @@ out Vertex {
     vec3 tangent;
     vec3 binormal;
     vec4 worldPos;
-    float visibility;
 } OUT;
 
 void main(void) {
@@ -34,9 +33,4 @@ void main(void) {
 
     OUT.worldPos = (modelMatrix * vec4(position, 1));
     gl_Position = (projMatrix * viewMatrix) * OUT.worldPos;
-
-    // FOG
-    vec4 distanceFromCam = viewMatrix * OUT.worldPos;
-    float magDistance = length(distanceFromCam.xyz);
-    OUT.visibility = exp(-pow((magDistance * 0.0007), 1.5));
 }
