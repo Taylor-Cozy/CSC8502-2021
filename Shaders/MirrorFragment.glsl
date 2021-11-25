@@ -2,18 +2,10 @@
 
 uniform sampler2D diffuseTex;
 uniform samplerCube cubeTex;
-uniform sampler2D bumpTex;
-uniform sampler2D heightmapTex;
 uniform vec3 cameraPos;
-uniform float time;
 
 in Vertex {
-    vec4 colour;
-    vec2 texCoord;
-    vec2 seaFoamTexCoord;
     vec3 normal;
-    vec3 tangent;
-    vec3 binormal;
     vec3 worldPos;
 } IN;
 

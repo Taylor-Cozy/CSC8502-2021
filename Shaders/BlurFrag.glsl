@@ -1,6 +1,7 @@
 #version 330 core
 
 uniform sampler2D sceneTex;
+uniform vec4 colour;
 
 uniform int isVertical;
 
@@ -30,5 +31,5 @@ void main(void){
         fragColour += tmp * scaleFactors[i];
     }
 
-    //fragColour *= vec4(0.97,0.97,0.999, 1.0);
+    fragColour *= colour; //vec4(0.97,0.97,0.999, 1.0);
 }

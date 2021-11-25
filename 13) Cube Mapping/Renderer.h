@@ -4,7 +4,7 @@
 class Camera;
 class Shader;
 class HeightMap;
-
+class Light;
 const int MAX_LIGHTS = 64;
 
 class Renderer : public OGLRenderer

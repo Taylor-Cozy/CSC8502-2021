@@ -55,11 +55,13 @@ protected:
 	void DrawMainScene();
 
 	void PresentScene();
-	void DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses = 1);
+	void DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses = 1, Vector4 colour = Vector4(1, 1, 1, 1));
 	void DrawBloom();
 	void CombineBloom();
 
 	void DrawSoldier();
+	void DrawMirror();
+	void DrawSun();
 
 	SceneNode* root;
 
@@ -73,6 +75,7 @@ protected:
 	Mesh* sphere;
 	Mesh* quad;
 	Mesh* circle;
+	Mesh* tree;
 	Mesh* soldier;
 	MeshAnimation* soldierAnim;
 	MeshMaterial* soldierMaterial;
@@ -93,8 +96,10 @@ protected:
 	Shader* bloomShader;
 	Shader* combineBloomShader;
 	Shader* skinningShader;
+	Shader* mirrorShader;
 
 	GLuint cubeMap;
+	GLuint cubeMapMountains;
 	GLuint earthTexture;
 	GLuint earthBump;
 	GLuint waterTexture;
@@ -104,6 +109,8 @@ protected:
 	GLuint heightmapTex;
 	GLuint rockTexture;
 	GLuint rockBump;
+	GLuint* currentCubeMap;
+	GLuint* altCubeMap;
 
 	GLuint shadowFBO;
 	GLuint shadowTex;

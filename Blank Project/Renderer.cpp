@@ -20,6 +20,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	soldier = Mesh::LoadFromMeshFile("Role_T.msh");
 	soldierAnim = new MeshAnimation("Role_T.anm");
 	soldierMaterial = new MeshMaterial("Role_T.mat");
+	tree = Mesh::LoadFromMeshFile("palmtree.msh");
 
 	for (int i = 0; i < soldier->GetSubMeshCount(); i++) {
 		const MeshMaterialEntry* matEntry = soldierMaterial->GetMaterialForLayer(i);
@@ -33,13 +34,6 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 
 	currentFrame = 0;
 	frameTime = 0.0f;
-
-	//rotation[0] = Matrix4::Rotation(0, Vector3(0, 1, 0));
-	//rotation[1] = Matrix4::Rotation(90, Vector3(0, 1, 0));
-	//rotation[2] = Matrix4::Rotation(180, Vector3(0, 1, 0));
-	//rotation[3] = Matrix4::Rotation(270, Vector3(0, 1, 0));
-	//rotation[4] = Matrix4::Rotation(90, Vector3(1, 0, 0));
-	//rotation[5] = Matrix4::Rotation(-90, Vector3(1, 0, 0));
 
 #pragma region Init Textures
 	waterTexture = SOIL_load_OGL_texture(TEXTUREDIR"water.TGA", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
@@ -55,15 +49,22 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 		TEXTUREDIR"Daylight Box_Right.bmp", TEXTUREDIR"Daylight Box_Left.bmp",
 		TEXTUREDIR"Daylight Box_Top.bmp", TEXTUREDIR"Daylight Box_Bottom.bmp",
 		TEXTUREDIR"Daylight Box_Front.bmp", TEXTUREDIR"Daylight Box_Back.bmp",
-		
-		
 		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
+
+	cubeMapMountains = SOIL_load_OGL_cubemap(
+		TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
+		TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
+		TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg",
+		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
+
+	currentCubeMap = &cubeMap;
 
 	if (!waterTexture	|| !waterBump		|| 
 		!earthTexture	|| !earthBump		|| 
 		!cubeMap		|| !heightmapTex	|| 
 		!sandTexture	|| !sandBump		|| 
-		!rockTexture	|| !rockBump		)
+		!rockTexture	|| !rockBump		||
+		!cubeMapMountains)
 		return;
 
 	SetTextureRepeating(waterTexture, true);
@@ -89,11 +90,13 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	bloomShader = new Shader("ProcessVertex.glsl", "BloomFrag.glsl");
 	combineBloomShader = new Shader("ProcessVertex.glsl", "CombineBloomFrag.glsl");
 	skinningShader = new Shader("SkinningVertex.glsl", "SkinningFragment.glsl");
+	mirrorShader = new Shader("MirrorVertex.glsl", "MirrorFragment.glsl");
 	if (!lightShader->LoadSuccess()			|| !defaultShader->LoadSuccess()	||
 		!reflectShader->LoadSuccess()		|| !skyboxShader->LoadSuccess()		||
 		!shadowShader->LoadSuccess()		|| !processShader->LoadSuccess()	||
 		!mapProcessShader->LoadSuccess()	|| !bloomShader->LoadSuccess()		||
-		!combineBloomShader->LoadSuccess()	|| !skinningShader->LoadSuccess())
+		!combineBloomShader->LoadSuccess()	|| !skinningShader->LoadSuccess()	||
+		!mirrorShader->LoadSuccess())
 		return;
 #pragma endregion
 
@@ -103,8 +106,8 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 
 #pragma region HeightMap Node
 	SceneNode* heightMapNode = new SceneNode(heightmap, Vector4(1,1,1,1));
-	BoundingBox* b = new BoundingBox(heightmapSize * Vector3(0.5, 0.5, 0.5), heightMapNode->GetWorldTransform());
-	b->SetOffset(heightmapSize * 0.5);
+	BoundingBox* b = new BoundingBox(heightmapSize * 0.5f, heightMapNode->GetWorldTransform());
+	b->SetOffset(heightmapSize * 0.5f);
 
 	heightMapNode->SetBoundingVolume(b);
 	heightMapNode->SetTexture(&earthTexture);
@@ -137,7 +140,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 #pragma endregion
 
 #pragma region Create Shadow Lights / Meshes
-	lights.emplace_back(new Light(Vector3(10.0f, 7.5f, 0.0f), Vector4(1, 1, 1, 1), DIRECTIONAL_LIGHT));
+	lights.emplace_back(new Light(Vector3(10, 7.5f, 0.0f), Vector4(1, 1, 1, 1), DIRECTIONAL_LIGHT));
 
 	Vector3 lightLocation = Vector3(heightmapSize.x * 0.5 + 50.0f, 50.0f, heightmapSize.z * 0.5 + 50.0f);
 	lightLocation = Vector3(lightLocation.x, heightmap->GetHeightAtLocation(lightLocation) + 100.0f, lightLocation.z);
@@ -152,14 +155,14 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	SceneNode* testShadow = new SceneNode(sphere);
 	testShadow->SetTransform(Matrix4::Translation(lightLocation) * Matrix4::Translation(Vector3(-70, -25, -70)) * Matrix4::Scale(Vector3(10, 10, 10)));
 	testShadow->SetShader(lightShader);
-	BoundingBox* shadowBound = new BoundingBox(Vector3(50, 50, 50), testShadow->GetWorldTransform());
+	BoundingBox* shadowBound = new BoundingBox(Vector3(10, 10, 10), testShadow->GetWorldTransform());
 	testShadow->SetBoundingVolume(shadowBound);
 	heightMapNode->AddChild(testShadow);
 
 	SceneNode* testShadow2 = new SceneNode(debugCube);
 	testShadow2->SetTransform(Matrix4::Translation(lightLocation2) * Matrix4::Translation(Vector3(-70, -25, -70)) * Matrix4::Scale(Vector3(15, 15, 15)));
 	testShadow2->SetShader(lightShader);
-	BoundingBox* shadowBound2 = new BoundingBox(Vector3(50, 50, 50), testShadow2->GetWorldTransform());
+	BoundingBox* shadowBound2 = new BoundingBox(Vector3(15, 15, 15), testShadow2->GetWorldTransform());
 	testShadow2->SetBoundingVolume(shadowBound2);
 	heightMapNode->AddChild(testShadow2);
 
@@ -188,7 +191,7 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 			Matrix4::Scale(Vector3(10, 10, 10))
 		);
 
-		BoundingBox* b = new BoundingBox(Vector3(50, 50, 50), lightNode->GetWorldTransform());
+		BoundingSphere* b = new BoundingSphere(10.0f, lightNode->GetWorldTransform());
 		lightNode->SetBoundingVolume(b);
 		lightNode->SetShader(defaultShader);
 		heightMapNode->AddChild(lightNode);
@@ -198,6 +201,11 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 		lights.emplace_back(l);
 	}
 #pragma endregion
+
+	SceneNode* treeNode = new SceneNode(tree);
+	treeNode->SetTransform(Matrix4::Translation(Vector3(0, 0, 0)) * Matrix4::Scale(Vector3(2.0, 2.0, 2.0)));
+	treeNode->SetShader(defaultShader);
+	heightMapNode->AddChild(treeNode);
 
 #pragma region Create Shadow FBO
 	glGenTextures(1, &shadowTex);
@@ -326,22 +334,41 @@ Renderer::Renderer(Window &parent) : OGLRenderer(parent)	{
 	}
 #pragma endregion
 
-	camera = new Camera(-45.0f, 0.0f, 0.0f, heightmapSize * Vector3(0.5f, 2.0f, 0.5f));
-	mapView = new Camera(-90, 0.0f, 0, heightmapSize * Vector3(0.5f, 5.0f, 0.5f), true);
+	//SceneNode* mirror = new SceneNode(circle);
+	//mirror->SetShader(mirrorShader);
+	//mirror->SetTexture(&cubeMapMountains);
+	//mirror->SetTransform(heightMapNode->GetTransform() * Matrix4::Translation(Vector3(0, 300, 0)));
+	////mirror->Set
+
+	camera = new Camera(-45.0f, 0.0f, 0.0f, heightmapSize * Vector3(0.05f, 3.0f, 0.05f));
+	mapView = new Camera(-90, 0.0f, 0, heightmapSize * Vector3(0.05f, 5.0f, 0.05f), true);
 
 	//projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
-	waypoints.emplace_back(heightmapSize* Vector3(0.5f, 2.0f, 0.5f));
-	waypoints.emplace_back(heightmapSize* Vector3(0.5f, 1.0f, 0.55f));
-	waypoints.emplace_back(heightmapSize* Vector3(0.6f, 1.0f, 0.4f));
-	waypoints.emplace_back(heightmapSize* Vector3(0.05f, 3.0f, 0.05f));
-	waypointRot.emplace_back(Vector2(-45.0f, 0));
-	waypointRot.emplace_back(Vector2(-45.0f, 0));
-	waypointRot.emplace_back(Vector2(-20.0f, -80));
+	waypoints.emplace_back(heightmapSize * Vector3(0.05f, 3.0f, 0.05f));	// Entire Island
+	waypoints.emplace_back(heightmapSize * Vector3(0.05f, 0.1f, 0.2f));		// Ocean
+	waypoints.emplace_back(heightmapSize * Vector3(0.2f, 0.1f, 0.9f));		// Ocean
+	waypoints.emplace_back(heightmapSize* Vector3(0.5f, 0.7f, 0.55f));		// Beach Soldier + Real Time Shadow
+	waypoints.emplace_back(heightmapSize* Vector3(0.58f, 0.9f, 0.4f));		// Other real time shadow
+	waypoints.emplace_back(heightmapSize* Vector3(0.61f, 0.5f, 0.42f));		// Bloom
+	waypoints.emplace_back(heightmapSize* Vector3(0.35f, 0.8f, 0.27f));		// Portal
+	waypoints.emplace_back(heightmapSize* Vector3(0.25f, 0.8f, 0.22f));		// Portal
 	waypointRot.emplace_back(Vector2(-30.0f, -130));
-	waypointTimes.emplace_back(0.0f);
-	waypointTimes.emplace_back(3.0f);
-	waypointTimes.emplace_back(3.0f);
+	waypointRot.emplace_back(Vector2(-0.0f, -170));
+	waypointRot.emplace_back(Vector2(-0.0f, -50));
+	waypointRot.emplace_back(Vector2(-20.0f, 10));
+	waypointRot.emplace_back(Vector2(-20.0f, -80));
+	waypointRot.emplace_back(Vector2(-20.0f, -180));
+	waypointRot.emplace_back(Vector2(-5.0f, -220));
+	waypointRot.emplace_back(Vector2(-5.0f, -150));
 	waypointTimes.emplace_back(5.0f);
+	waypointTimes.emplace_back(0.0f);
+	waypointTimes.emplace_back(0.0f);
+	waypointTimes.emplace_back(5.0f);
+	waypointTimes.emplace_back(3.0f);
+	waypointTimes.emplace_back(3.0f);
+	waypointTimes.emplace_back(0.1f);
+	waypointTimes.emplace_back(3.0f);
+
 	oldPos = camera->GetPosition();
 	oldRot = Vector2(-45.0f, 0);
 
@@ -376,7 +403,6 @@ void Renderer::UpdateScene(float dt) {
 		frameTime += 1.0f / soldierAnim->GetFrameRate();
 	}
 
-	//viewMatrix = camera->BuildViewMatrix();
 	if (followTrack) {
 		if (curWaitTime <= 0.0f) {
 			curTime += dt;
@@ -391,7 +417,7 @@ void Renderer::UpdateScene(float dt) {
 			mapView->SetPosition(Vector3(newcamPos.x, mapView->GetPosition().y, newcamPos.z));
 			mapView->SetYaw(newYaw);
 
-			if (distance(camera->GetPosition(), waypoints[currentWaypoint]) < 20.0f) {
+			if (distance(camera->GetPosition(), waypoints[currentWaypoint]) < 1.0f) {
 				curWaitTime = waypointTimes[currentWaypoint];
 				oldPos = waypoints[currentWaypoint];
 				oldRot = waypointRot[currentWaypoint];
@@ -435,17 +461,17 @@ void Renderer::BuildNodeLists(SceneNode* from) {
 		Vector3 dir = from->GetWorldTransform().GetPositionVector() - camera->GetPosition();
 		from->SetCameraDistance(Vector3::Dot(dir, dir));
 
-		if (from->IsLight()) {
-			lightNodeList.push_back(from);
-		}
-		else {
+		//if (from->IsLight()) {
+		//	lightNodeList.push_back(from);
+		//}
+		//else {
 			if (from->GetColour().w < 1.0f) {
 				transparentNodeList.push_back(from);
 			}
 			else {
 				nodeList.push_back(from);
 			}
-		}
+		//}
 	}
 
 	for (vector<SceneNode*>::const_iterator i = from->GetChildIteratorStart(); i != from->GetChildIteratorEnd(); ++i) {
@@ -479,11 +505,17 @@ void Renderer::DrawNodes(bool shadowPass) {
 void Renderer::DrawDebugNodes() {
 
 	BindShader(defaultShader);
+	glUniform4fv(glGetUniformLocation(defaultShader->GetProgram(), "nodeColour"), 1, (float*)&Vector4(1, 1, 1, 1));
+	glUniform1i(glGetUniformLocation(defaultShader->GetProgram(), "useTexture"), 0);
 	UpdateShaderMatrices();
 
 	//glDisable(GL_DEPTH_TEST);
 
 	for (const auto& i : nodeList) {
+		DrawDebugNode(i);
+	}
+
+	for (const auto& i : lightNodeList) {
 		DrawDebugNode(i);
 	}
 
@@ -522,10 +554,20 @@ void Renderer::DrawNode(SceneNode* n, bool shadowPass) {
 
 void Renderer::DrawDebugNode(SceneNode* n) {
 	if (n->GetMesh()) {
-		Matrix4 model = n->GetBoundingVolume()->GetWorldPosition() * Matrix4::Scale(Vector3(2,2,2));
-		glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgram(), "modelMatrix"), 1, false, (model).values);
 		glUniform4fv(glGetUniformLocation(defaultShader->GetProgram(), "nodeColour"), 1, (float*)& Vector4(0.98, 0.28, 0.76, 0.5));
-		debugCube->Draw();
+		
+		if (n->GetBoundingVolume()->GetType() == BOX) {
+			//Matrix4 model = n->GetBoundingVolume()->GetWorldPosition() * Matrix4::Scale(Vector3(2, 2, 2)); // Cube is 0.5 units wide therefore scale by 2
+			//glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgram(), "modelMatrix"), 1, false, (model).values);
+			modelMatrix = n->GetBoundingVolume()->GetWorldPosition() * Matrix4::Scale(Vector3(2, 2, 2));
+			UpdateShaderMatrices();
+			debugCube->Draw();
+		}
+		else {
+			Matrix4 model = n->GetBoundingVolume()->GetWorldPosition(); // Cube is 0.5 units wide therefore scale by 2
+			glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgram(), "modelMatrix"), 1, false, (model).values);
+			sphere->Draw();
+		}
 		//debugSphere->Draw();
 	}
 }
@@ -561,6 +603,16 @@ void Renderer::RenderScene() {
 
 	DrawMainScene();
 	DrawSoldier();
+	DrawMirror();
+	DrawSun();
+
+	//glDisable(GL_DEPTH_TEST);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//DrawDebugNodes();
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//glEnable(GL_DEPTH_TEST);
+
 	DrawBloom();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
@@ -580,10 +632,10 @@ void Renderer::RenderScene() {
 	//viewMatrix = sceneViewMatrix;
 
 	if (camera->GetPosition().y < 140) {
-		DrawPostProcess(bufferColourTex, processShader, 10);
+		DrawPostProcess(bufferColourTex, processShader, 10, Vector4(0.98, 0.98, 0.999, 1));
 	}
 	else {
-		DrawPostProcess(bufferColourTex, mapProcessShader, 1);
+		DrawPostProcess(bufferColourTex, mapProcessShader);
 	}
 	
 	glEnable(GL_DEPTH_TEST);
@@ -596,19 +648,12 @@ void Renderer::RenderScene() {
 	viewMatrix = mapViewMatrix;
 
 	DrawMainScene();
-	DrawPostProcess(mapColourTex, mapProcessShader, 1);
+	DrawPostProcess(mapColourTex, mapProcessShader);
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 	viewMatrix = sceneViewMatrix;
 
 	PresentScene();
-	
-	//glDisable(GL_DEPTH_TEST);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//DrawDebugNodes();
-	//
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//glEnable(GL_DEPTH_TEST);
 
 	ClearNodeLists();
 }
@@ -617,6 +662,9 @@ void Renderer::DrawSkyBox() {
 	glDepthMask(GL_FALSE);
 
 	BindShader(skyboxShader);
+	glUniform1i(glGetUniformLocation(skyboxShader->GetProgram(), "cubeTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
 	UpdateShaderMatrices();
 
 	quad->Draw();
@@ -664,7 +712,7 @@ void Renderer::DrawShadowScene() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses) {
+void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader, int numberPasses, Vector4 colour) {
 	glBindFramebuffer(GL_FRAMEBUFFER, processFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureArray[1], 0);
 	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
@@ -681,6 +729,8 @@ void Renderer::DrawPostProcess(GLuint* textureArray, Shader* processShader, int 
 
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(processShader->GetProgram(), "sceneTex"), 0);
+
+	glUniform4fv(glGetUniformLocation(processShader->GetProgram(), "colour"), 1, (float*)&colour);
 	for (int i = 0; i < numberPasses; i++) {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureArray[1], 0);
 		glUniform1i(glGetUniformLocation(processShader->GetProgram(), "isVertical"), 0);
@@ -762,6 +812,34 @@ void Renderer::DrawSoldier()
 		glBindTexture(GL_TEXTURE_2D, soldierTextures[i]);
 		soldier->DrawSubMesh(i);
 	}
+}
+
+void Renderer::DrawMirror() {
+	BindShader(mirrorShader);
+	glUniform3fv(glGetUniformLocation(mirrorShader->GetProgram(), "cameraPos"), 1, (float*)&camera->GetPosition());
+
+	glUniform1i(glGetUniformLocation(mirrorShader->GetProgram(), "cubeTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapMountains);
+
+	Vector3 location = heightmap->GetHeightMapSize() * Vector3(0.3f, 2.0f, 0.3f);
+	location.y = heightmap->GetHeightAtLocation(location) + 100.0f;
+
+	modelMatrix = Matrix4::Translation(location) * Matrix4::Scale(Vector3(50.0f, 100.0f, 1.0f));
+
+	UpdateShaderMatrices();
+
+	circle->Draw();
+}
+
+void Renderer::DrawSun()
+{
+	BindShader(defaultShader);
+	modelMatrix = Matrix4::Translation(camera->GetPosition() + Vector3(2500.0f, 1875.0f, 0.0f)) * Matrix4::Rotation(90, Vector3(0, 1, 0)) * Matrix4::Scale(Vector3(100, 100, 1));
+	glUniform4fv(glGetUniformLocation(defaultShader->GetProgram(), "nodeColour"), 1, (float*)&Vector4(1,1,1,1));
+	glUniform1i(glGetUniformLocation(defaultShader->GetProgram(), "useTexture"), 0);
+	UpdateShaderMatrices();
+	circle->Draw();
 }
 
 void Renderer::PresentScene() {
