@@ -3,7 +3,7 @@
 #include "..//nclgl/HeightMap.h"
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
-	heightMap = new HeightMap(TEXTUREDIR"noise.png");
+	heightMap = new HeightMap(TEXTUREDIR"noise1.png", TEXTUREDIR"noise2.png", TEXTUREDIR"noise3.png", TEXTUREDIR"squareGradient.png");
 	camera = new Camera(-40, 0, 0, Vector3());
 
 	Vector3 dimensions = heightMap->GetHeightMapSize();

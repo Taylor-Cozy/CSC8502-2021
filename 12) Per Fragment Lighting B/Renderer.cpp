@@ -6,7 +6,7 @@
 const int LIGHTS_COUNT = 4;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
-	heightMap = new HeightMap(TEXTUREDIR"noise.png");
+	heightMap = new HeightMap(TEXTUREDIR"noise1.png", TEXTUREDIR"noise2.png", TEXTUREDIR"noise3.png", TEXTUREDIR"squareGradient.png");
 	texture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 
 	bumpmap = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
@@ -25,7 +25,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	Vector3 heightmapSize = heightMap->GetHeightMapSize();
 	camera = new Camera(-45.0f, 0.0f, 0.0f, heightmapSize * Vector3(0.5f, 5.0f, 0.5f));
 	for (int i = 0; i < LIGHTS_COUNT; i++) {
-		lights.push_back(new Light(heightmapSize * Vector3(0.0f + (0.2f * (i + 1)), 1.5f, 0.5f), Vector4(0.8, 0.960, 0.980, 1), Vector4(0.945, 0.694, 0.913, 1), heightmapSize.x * 0.5f));
+		lights.push_back(new Light(heightmapSize * Vector3(0.0f + (0.2f * (i + 1)), 1.5f, 0.5f), Vector4(0.8, 0.960, 0.980, 1), Vector4(0.945, 0.694, 0.913, 1), POINT_LIGHT, heightmapSize.x * 0.5f));
 	}
 
 	projMatrix = Matrix4::Perspective(1.0f, 15000.0f, (float)width / (float)height, 45.0f);

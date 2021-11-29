@@ -6,7 +6,7 @@
 const int MAX_LIGHTS = 64;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
-	heightMap = new HeightMap(TEXTUREDIR"noise.png");
+	heightMap = new HeightMap(TEXTUREDIR"noise1.png", TEXTUREDIR"noise2.png", TEXTUREDIR"noise3.png", TEXTUREDIR"squareGradient.png");
 	texture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 
 	shader = new Shader("PerPixelVertex.glsl", "PerPixelFragment.glsl");
