@@ -1,5 +1,5 @@
 # Tropical Island Graphics
-## CSC8502 Advanced Graphics for Games
+## University Coursework
 
 This is part of my coursework for CSC8502, a module I undertook during my Masters in Games Engineering. It is programmed in C++ using OpenGL and GLSL.
 
